@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Inter:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-chili-50: #FDECEC;
+  --color-chili-100: #FAD2D2;
+  --color-chili-200: #F2A4A4;
+  --color-chili-300: #E67878;
+  --color-chili-400: #D94F4F;
+  --color-chili-500: #C1272D;
+  --color-chili-600: #A31F25;
+  --color-chili-700: #84181D;
+  --color-chili-800: #651216;
+  --color-chili-900: #470C0F;
+
+  --color-cream-50: #FFFDF8;
+  --color-cream-100: #FAF6EC;
+  --color-cream-200: #F3ECDB;
+  --color-cream-300: #E9DEC4;
+  --color-cream-400: #D8C7A3;
+
+  --color-ink-900: #241914;
+  --color-ink-700: #463530;
+  --color-ink-500: #6E5C55;
+  --color-ink-300: #A6968F;
+
+  --color-success-500: #2E7D32;
+  --color-success-100: #E3F1E4;
+  --color-warning-500: #C77700;
+  --color-warning-100: #FBF0DC;
+  --color-danger-500: #C1272D;
+  --color-danger-100: #FDECEC;
+
+  --font-display: 'Fraunces', serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  --radius-card: 1.25rem;
+  --radius-pill: 999px;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+  }
+  body {
+    background-color: var(--color-cream-100);
+    color: var(--color-ink-900);
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+  }
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
