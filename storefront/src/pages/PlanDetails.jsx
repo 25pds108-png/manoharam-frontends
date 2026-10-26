@@ -44,7 +44,7 @@ export default function PlanDetails() {
   const plan = data?.plan
   const products = data?.products ?? []
   const dietaryType = plan ? getPlanDietaryType(plan) : 'VEG'
-  const heroImage = products.find((p) => p.image_url)?.image_url
+  const heroImage = plan?.image_url || plan?.image || products.find((p) => p.image_url)?.image_url
 
   const totals = products.reduce(
     (acc, p) => ({

@@ -47,7 +47,7 @@ export default function PlanCard({ plan }) {
   const dietaryType = getPlanDietaryType(plan)
   const isVeg = dietaryType === 'VEG'
   const products = plan.products ?? []
-  const heroImage = products.find((p) => p.image_url)?.image_url
+  const heroImage = plan.image_url || plan.image || products.find((p) => p.image_url)?.image_url
   const previewText = products.map((p) => p.name).join(' · ')
   const pricePerWeek = Number(plan.price_per_week ?? 0)
   const pricePerDay = pricePerWeek / 7
