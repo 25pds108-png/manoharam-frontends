@@ -115,7 +115,7 @@ export default function Subscription() {
             </span>
           </div>
           <h1 className="mt-1 font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1917]">
-            Weekly Meal & Pickle Subscriptions
+            Weekly Food & Meal Subscriptions
           </h1>
           <p className="mt-1 text-xs sm:text-sm text-[#78716C]">
             Fresh traditional South Indian home cooking delivered on your schedule. Skip any date with 1 tap.

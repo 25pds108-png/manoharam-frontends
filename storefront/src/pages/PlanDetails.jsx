@@ -16,6 +16,8 @@ import AppShell from '../components/layout/AppShell'
 import { getPlanDetails } from '../api/subscriptions'
 import { getPlanDietaryType } from '../lib/planDietaryType'
 import { useAuth } from '../context/AuthContext'
+import traditionalMeals from '../assets/food/traditional-meals.jpg'
+import mangoPickle from '../assets/food/mango-pickle.jpg'
 
 export default function PlanDetails() {
   const { planId } = useParams()
@@ -30,7 +32,10 @@ export default function PlanDetails() {
   const plan = data?.plan
   const products = data?.products ?? []
   const dietaryType = plan ? getPlanDietaryType(plan) : 'VEG'
-  const heroImage = plan?.image_url || plan?.image || products.find((p) => p.image_url)?.image_url
+  const rawHeroImage = plan?.image_url || plan?.image || products.find((p) => p.image_url)?.image_url
+  const isPlaceholder = !rawHeroImage || rawHeroImage.includes('example.com')
+  const defaultFoodImg = plan?.name?.toLowerCase().includes('pickle') ? mangoPickle : traditionalMeals
+  const heroImage = isPlaceholder ? defaultFoodImg : rawHeroImage
 
   const totals = products.reduce(
     (acc, p) => ({

@@ -1,7 +1,10 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Utensils } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { getPlanDietaryType } from '../../lib/planDietaryType'
 import { useAuth } from '../../context/AuthContext'
+import traditionalMeals from '../../assets/food/traditional-meals.jpg'
+import mangoPickle from '../../assets/food/mango-pickle.jpg'
 
 function DietaryMark({ type }) {
   const isVeg = type === 'VEG'
@@ -24,7 +27,10 @@ export default function PlanCard({ plan }) {
   const dietaryType = getPlanDietaryType(plan)
   const isVeg = dietaryType === 'VEG'
   const products = plan.products ?? []
-  const heroImage = plan.image_url || plan.image || products.find((p) => p.image_url)?.image_url
+  const rawImage = plan.image_url || plan.image || products.find((p) => p.image_url)?.image_url
+  const isPlaceholder = !rawImage || rawImage.includes('example.com')
+  const defaultFoodImg = plan.name?.toLowerCase().includes('pickle') ? mangoPickle : traditionalMeals
+  const [imgSrc, setImgSrc] = useState(isPlaceholder ? defaultFoodImg : rawImage)
   const previewText = products.map((p) => p.name).join(' · ')
   const pricePerWeek = Number(plan.price_per_week ?? 0)
   const pricePerDay = pricePerWeek / 7
@@ -44,18 +50,13 @@ export default function PlanCard({ plan }) {
         to={`/plans/${plan.id}`}
         className="relative aspect-[4/3] w-full overflow-hidden bg-[#F3EBDD] block cursor-pointer"
       >
-        {heroImage ? (
-          <img
-            src={heroImage}
-            alt={plan.name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-[#9B2C2C]/40">
-            <Utensils className="h-8 w-8" />
-          </div>
-        )}
+        <img
+          src={imgSrc}
+          alt={plan.name}
+          onError={() => setImgSrc(defaultFoodImg)}
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          loading="lazy"
+        />
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/50 to-transparent" />
 

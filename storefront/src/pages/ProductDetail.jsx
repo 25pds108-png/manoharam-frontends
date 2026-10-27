@@ -162,7 +162,7 @@ export default function ProductDetail() {
             Home
           </Link>
           <ChevronRight className="h-3.5 w-3.5 text-[#A8A29E]" />
-          <span>{product.category || 'Pickles'}</span>
+          <span>{product.category || 'Food'}</span>
           <ChevronRight className="h-3.5 w-3.5 text-[#A8A29E]" />
           <span className="font-semibold text-[#1C1917] truncate">{product.name}</span>
         </nav>

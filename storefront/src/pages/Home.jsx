@@ -63,40 +63,59 @@ export default function Home() {
             ========================================================================= */}
         <section className="relative overflow-hidden rounded-2xl border border-[#E6D9C5] bg-[#1C1917] shadow-sm">
           {/* Main Food Photo Background / Visual */}
-          <div className="relative min-h-[300px] sm:min-h-[360px] md:min-h-[400px] w-full">
+          <div className="relative min-h-[320px] sm:min-h-[380px] md:min-h-[420px] w-full">
             <img
               src={heroBanner}
-              alt="Authentic South Indian pickles prepared in cold-pressed oil"
+              alt="Authentic handcrafted South Indian food prepared with cold-pressed oils"
               className="absolute inset-0 h-full w-full object-cover object-center"
             />
-            {/* Soft Warm Gradient Overlay so text is crystal clear while food remains vivid */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/25 sm:w-3/4" />
+            {/* Soft Warm Gradient Overlay so text and branding are crystal clear while food photography shines */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/65 to-black/30 sm:w-4/5" />
 
             {/* Concise Hero Content */}
-            <div className="relative z-10 flex min-h-[300px] sm:min-h-[360px] md:min-h-[400px] max-w-xl flex-col justify-center p-5 sm:p-8 md:p-10">
-              <span className="font-serif text-xs sm:text-sm italic font-medium text-[#FDEBB2]">
-                “Safe, as your mother's home.”
-              </span>
+            <div className="relative z-10 flex min-h-[320px] sm:min-h-[380px] md:min-h-[420px] max-w-xl flex-col justify-center p-5 sm:p-8 md:p-10">
+              {/* Brand Logo & Name */}
+              <div className="flex items-center gap-2.5 mb-3">
+                <img
+                  src={logo}
+                  alt="Manoharam Real Foods"
+                  className="h-9 sm:h-11 w-auto object-contain drop-shadow-md"
+                />
+                <span className="font-serif text-base sm:text-lg font-bold tracking-tight text-white drop-shadow-sm">
+                  Manoharam Real Foods
+                </span>
+              </div>
 
-              <h1 className="mt-2 font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight">
-                Authentic Homemade South Indian Pickles & Meals
+              {/* Mandatory Official Tagline — Prominently Featured */}
+              <div className="inline-flex items-center self-start gap-2 rounded-full border border-amber-300/40 bg-black/40 px-3.5 py-1.5 backdrop-blur-md mb-3">
+                <span className="font-serif text-xs sm:text-sm md:text-base italic font-semibold text-amber-200 tracking-wide">
+                  “Safe, as your mother's home.”
+                </span>
+              </div>
+
+              <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight">
+                Handcrafted Traditional Food, Made Pure
               </h1>
+
+              <p className="mt-2 text-xs sm:text-sm text-[#F3EBDD]/90 max-w-md leading-relaxed">
+                Prepared in small batches with cold-pressed oils, natural ingredients, and authentic homestyle care.
+              </p>
 
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <a
                   href="#products"
-                  className="inline-flex items-center gap-1.5 rounded-md bg-[#9B2C2C] px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs hover:bg-[#7B1F23] active:scale-95 transition-all"
+                  className="inline-flex items-center gap-2 rounded-md bg-[#9B2C2C] px-5 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-[#7B1F23] active:scale-95 transition-all"
                 >
-                  <span>Shop Pickles</span>
+                  <span>Shop Now</span>
                   <ArrowRight className="h-4 w-4" />
                 </a>
 
                 <Link
                   to="/subscription"
-                  className="inline-flex items-center gap-1.5 rounded-md border border-white/30 bg-black/40 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white backdrop-blur-xs hover:bg-white/20 active:scale-95 transition-all"
+                  className="inline-flex items-center gap-2 rounded-md border border-white/40 bg-white/10 px-5 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white backdrop-blur-xs hover:bg-white/20 active:scale-95 transition-all"
                 >
                   <CalendarCheck className="h-4 w-4 text-[#FDEBB2]" />
-                  <span>Weekly Plans</span>
+                  <span>Meal Plans</span>
                 </Link>
               </div>
             </div>
@@ -104,48 +123,55 @@ export default function Home() {
         </section>
 
         {/* =========================================================================
-            CATEGORY QUICK TILES — Visual Food Categories
+            CATEGORY DISCOVERY — Dynamic & Food-First
             ========================================================================= */}
-        <section aria-label="Product categories" className="grid grid-cols-2 gap-3 sm:gap-4">
-          <a
-            href="#products"
-            onClick={() => setActiveCategory('Pickles')}
-            className="group flex items-center gap-3 rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] p-3 sm:p-4 shadow-xs hover:border-[#9B2C2C]/40 hover:shadow-sm transition-all"
-          >
-            <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg bg-[#F3EBDD]">
-              <img
-                src={mangoPickleThumb}
-                alt="Traditional Pickles"
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-            </div>
-            <div>
-              <p className="font-serif text-sm sm:text-base font-bold text-[#1C1917] group-hover:text-[#9B2C2C] transition-colors">
-                Pickles & Thokku
-              </p>
-              <p className="text-[11px] text-[#78716C]">
-                {allProducts.length > 0 ? `${allProducts.length} varieties` : 'Homemade jars'}
-              </p>
-            </div>
-          </a>
+        <section aria-label="Product categories" className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+          {/* Dynamic Categories from Backend */}
+          {categories
+            .filter((cat) => cat !== 'All')
+            .map((cat) => (
+              <a
+                key={cat}
+                href="#products"
+                onClick={() => setActiveCategory(cat)}
+                className="group flex items-center gap-3 rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] p-3 sm:p-4 shadow-xs hover:border-[#9B2C2C]/40 hover:shadow-sm transition-all"
+              >
+                <div className="relative h-13 w-13 sm:h-15 sm:w-15 shrink-0 overflow-hidden rounded-lg bg-[#F3EBDD]">
+                  <img
+                    src={mangoPickleThumb}
+                    alt={cat}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-serif text-sm sm:text-base font-bold text-[#1C1917] group-hover:text-[#9B2C2C] transition-colors truncate">
+                    {cat}
+                  </p>
+                  <p className="text-[11px] text-[#78716C]">
+                    Browse selection
+                  </p>
+                </div>
+              </a>
+            ))}
 
+          {/* Weekly Plans Category Tile */}
           <Link
             to="/subscription"
             className="group flex items-center gap-3 rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] p-3 sm:p-4 shadow-xs hover:border-[#9B2C2C]/40 hover:shadow-sm transition-all"
           >
-            <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg bg-[#F3EBDD]">
+            <div className="relative h-13 w-13 sm:h-15 sm:w-15 shrink-0 overflow-hidden rounded-lg bg-[#F3EBDD]">
               <img
                 src={traditionalMealsThumb}
                 alt="Weekly Subscriptions"
                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
             </div>
-            <div>
-              <p className="font-serif text-sm sm:text-base font-bold text-[#1C1917] group-hover:text-[#9B2C2C] transition-colors">
+            <div className="min-w-0">
+              <p className="font-serif text-sm sm:text-base font-bold text-[#1C1917] group-hover:text-[#9B2C2C] transition-colors truncate">
                 Weekly Meal Plans
               </p>
               <p className="text-[11px] text-[#78716C]">
-                Scheduled home delivery
+                Scheduled delivery
               </p>
             </div>
           </Link>
@@ -158,8 +184,11 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#E6D9C5] pb-3">
             <div>
               <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#1C1917]">
-                Fresh Homemade Pickles
+                {activeCategory === 'All' ? 'Our Food Catalog' : activeCategory}
               </h2>
+              <p className="text-xs text-[#78716C] mt-0.5">
+                {visibleProducts.length} {visibleProducts.length === 1 ? 'item' : 'items'} available
+              </p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -275,7 +304,7 @@ export default function Home() {
                   Scheduled Service
                 </span>
                 <h3 className="font-serif text-base sm:text-lg font-bold text-[#1C1917]">
-                  Weekly Meal & Pickle Subscriptions
+                  Weekly Food & Meal Subscriptions
                 </h3>
                 <p className="mt-0.5 text-xs text-[#78716C]">
                   Fresh home-style delivery on your schedule. 1-tap date skipping anytime.

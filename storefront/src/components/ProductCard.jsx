@@ -90,7 +90,7 @@ export default function ProductCard({ product }) {
       {/* Product Details */}
       <div className="flex flex-1 flex-col justify-between p-2.5 sm:p-3.5">
         <div>
-          <h3 className="line-clamp-2 font-serif text-xs sm:text-sm font-bold text-[#1C1917] group-hover:text-[#9B2C2C] transition-colors leading-snug">
+          <h3 className="line-clamp-2 font-sans text-xs sm:text-sm font-semibold text-[#1C1917] group-hover:text-[#9B2C2C] transition-colors leading-snug">
             {product.name}
           </h3>
           {unitText ? (
@@ -103,7 +103,7 @@ export default function ProductCard({ product }) {
         {/* Price & Add Action */}
         <div className="mt-2.5 flex items-center justify-between gap-1.5 border-t border-[#E6D9C5]/60 pt-2">
           <div>
-            <span className="font-serif text-sm sm:text-base font-bold text-[#9B2C2C]">
+            <span className="font-serif text-base sm:text-lg font-bold text-[#9B2C2C] tabular-nums">
               ₹{price.toFixed(0)}
             </span>
           </div>

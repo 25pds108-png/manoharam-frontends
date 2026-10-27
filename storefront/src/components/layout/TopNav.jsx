@@ -5,8 +5,8 @@ import { useCart } from '../../context/CartContext'
 import logo from '../../assets/logo.png'
 
 const links = [
-  { to: '/', label: 'Our Menu & Pickles', end: true },
-  { to: '/subscription', label: 'Weekly Plans', icon: CalendarCheck },
+  { to: '/', label: 'Shop Food', end: true },
+  { to: '/subscription', label: 'Meal Plans', icon: CalendarCheck },
   { to: '/orders', label: 'My Orders' },
 ]
 

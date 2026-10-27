@@ -50,15 +50,20 @@ export default function SubscriptionDetails() {
   })
 
   const subscription = detailQuery.data?.subscription
-  const rawProducts = detailQuery.data?.products
+  const products = useMemo(() => {
+    if (Array.isArray(detailQuery.data?.products)) return detailQuery.data.products
+    if (Array.isArray(subscription?.products)) return subscription.products
+    return []
+  }, [detailQuery.data?.products, subscription?.products])
   const deliverySchedule = detailQuery.data?.delivery_schedule ?? []
 
   const productsById = useMemo(() => {
     const map = new Map()
-    if (!rawProducts) return map
-    rawProducts.forEach((p) => map.set(p.id, p))
+    products.forEach((p) => {
+      if (p && p.id) map.set(p.id, p)
+    })
     return map
-  }, [rawProducts])
+  }, [products])
 
   const refreshAll = () => {
     detailQuery.refetch()
@@ -520,8 +525,8 @@ function Stat({ icon: Icon, label, value, wide }) {
   )
 }
 
-function ProductsSection({ products }) {
-  if (products.length === 0) return null
+function ProductsSection({ products = [] }) {
+  if (!Array.isArray(products) || products.length === 0) return null
 
   return (
     <div className="mt-6">
@@ -582,8 +587,8 @@ function NutrientStat({ label, value, unit = '' }) {
   )
 }
 
-function ScheduleSection({ deliverySchedule, productsById, onSkipDay, isActing }) {
-  if (deliverySchedule.length === 0) return null
+function ScheduleSection({ deliverySchedule = [], productsById = new Map(), onSkipDay, isActing }) {
+  if (!Array.isArray(deliverySchedule) || deliverySchedule.length === 0) return null
 
   const todayStr = new Date().toISOString().slice(0, 10)
 

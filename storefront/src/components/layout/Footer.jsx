@@ -30,7 +30,7 @@ export default function Footer() {
             </p>
 
             <p className="text-xs text-[#78716C] leading-relaxed">
-              Traditional South Indian homemade pickles and scheduled weekly meal deliveries.
+              Pure handcrafted traditional South Indian food and scheduled weekly meal deliveries.
             </p>
           </div>
 
@@ -42,7 +42,7 @@ export default function Footer() {
             <ul className="space-y-1.5 text-xs text-[#78716C]">
               <li>
                 <Link to="/" className="hover:text-[#9B2C2C] transition-colors">
-                  Pickles & Delicacies
+                  All Food Products
                 </Link>
               </li>
               <li>
