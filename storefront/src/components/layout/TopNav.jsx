@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Search, ShoppingCart, CalendarCheck, Bell, LogOut, Sparkles } from 'lucide-react'
+import { Search, ShoppingCart, CalendarCheck, Bell, LogOut } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
 import logo from '../../assets/logo.png'
@@ -22,24 +22,8 @@ export default function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 hidden border-b border-[#E6D9C5] bg-[#FAF6EF]/95 backdrop-blur-md md:block shadow-xs">
-      {/* Top Announcement Bar */}
-      <div className="bg-[#9B2C2C] px-4 py-1.5 text-center text-xs font-medium text-[#FAF6EF] tracking-wide">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <span className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wider uppercase text-[#FDEBB2]">
-            <Sparkles className="h-3 w-3 text-[#FDEBB2]" />
-            Small-Batch Kitchen Craft
-          </span>
-          <p className="font-serif text-xs italic tracking-wider text-[#FAF6EF]">
-            “Safe, as your mother's home.”
-          </p>
-          <span className="text-[11px] text-[#FDEBB2]/90 hidden lg:inline">
-            100% Cold-Pressed Oils • Zero Chemical Preservatives
-          </span>
-        </div>
-      </div>
-
       {/* Main Navbar */}
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-3">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-2.5">
         {/* Brand Logo & Name */}
         <Link to="/" className="flex items-center gap-3.5 group shrink-0">
           <img

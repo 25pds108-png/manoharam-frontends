@@ -7,23 +7,19 @@ import {
   RefreshCw,
   ShoppingBag,
   ArrowRight,
-  ShieldCheck,
-  Heart,
-  Sparkles,
-  Flame,
+  CalendarCheck,
 } from 'lucide-react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import AppShell from '../components/layout/AppShell'
 import ProductCard from '../components/ProductCard'
-import SubscriptionSection from '../components/SubscriptionSection'
 import TodayDeliveryBanner from '../components/TodayDeliveryBanner'
-import WelcomeModal from '../components/WelcomeModal'
 import { listProducts, listCategories } from '../api/products'
-import { useAuth } from '../context/AuthContext'
 import logo from '../assets/logo.png'
+import heroBanner from '../assets/food/hero-banner.jpg'
+import mangoPickleThumb from '../assets/food/mango-pickle.jpg'
+import traditionalMealsThumb from '../assets/food/traditional-meals.jpg'
 
 export default function Home() {
-  const { user } = useAuth()
   const [activeCategory, setActiveCategory] = useState('All')
 
   const categoriesQuery = useQuery({
@@ -52,249 +48,153 @@ export default function Home() {
   }, [categoriesQuery.data, allProducts])
 
   const visibleProducts = useMemo(() => {
-    if (activeCategory === 'All') return allProducts;
+    if (activeCategory === 'All') return allProducts
     return allProducts.filter((p) => p.category === activeCategory)
   }, [allProducts, activeCategory])
 
-  const firstName = user?.name?.split(' ')[0]
-
   return (
     <AppShell>
-      <WelcomeModal />
-
-      <div className="mx-auto w-full max-w-7xl">
-        {/* =========================================================================
-            HERO SECTION — Authentic South Indian Culinary Heritage & Official Tagline
-            ========================================================================= */}
-        <section className="relative overflow-hidden pt-4 pb-8 sm:py-10 md:py-12">
-          {/* Subtle warm background glow */}
-          <div className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-96 w-full -translate-x-1/2 rounded-full bg-gradient-to-b from-[#FCE4E4]/60 via-[#FAF6EF] to-transparent blur-3xl" />
-
-          <div className="px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12">
-              {/* Left Column: Brand Copy & Core Actions */}
-              <div className="lg:col-span-7">
-                {/* Official Tagline Badge */}
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#9B2C2C]/20 bg-[#FCE4E4] px-3.5 py-1 text-xs font-semibold text-[#9B2C2C] shadow-xs">
-                  <Heart className="h-3.5 w-3.5 fill-[#9B2C2C]" />
-                  <span>“Safe, as your mother's home.”</span>
-                </div>
-
-                {/* Main Heading */}
-                <h1 className="mt-4 font-serif text-3xl font-bold tracking-tight text-[#1C1917] sm:text-4xl lg:text-5xl lg:leading-[1.15]">
-                  {user ? (
-                    <>
-                      Welcome back,{' '}
-                      <span className="text-[#9B2C2C]">{firstName}</span>.
-                      <br />
-                      <span className="font-normal italic text-[#44403C] text-2xl sm:text-3xl lg:text-4xl">
-                        Fresh homemade flavours, daily.
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      Authentic homemade taste,
-                      <br />
-                      <span className="text-[#9B2C2C]">prepared with maternal care.</span>
-                    </>
-                  )}
-                </h1>
-
-                {/* Narrative Subtitle */}
-                <p className="mt-4 max-w-xl text-sm leading-relaxed text-[#44403C] sm:text-base">
-                  Handcrafted South Indian pickles, sun-roasted spices, and healthy weekly meal subscriptions. Prepared in small batches with pure cold-pressed oils, authentic heritage recipes, and zero chemical preservatives.
-                </p>
-
-                {/* Trust Highlights Strip */}
-                <div className="mt-6 grid grid-cols-3 gap-3 border-y border-[#E6D9C5] py-3.5 text-left">
-                  <div>
-                    <p className="font-serif text-xs font-bold text-[#1C1917] sm:text-sm">
-                      Cold-Pressed Oils
-                    </p>
-                    <p className="text-[11px] text-[#78716C] leading-snug">Pure gingelly & groundnut</p>
-                  </div>
-                  <div>
-                    <p className="font-serif text-xs font-bold text-[#1C1917] sm:text-sm">
-                      Sun-Cured Spices
-                    </p>
-                    <p className="text-[11px] text-[#78716C] leading-snug">Stone-ground slowly</p>
-                  </div>
-                  <div>
-                    <p className="font-serif text-xs font-bold text-[#1C1917] sm:text-sm">
-                      Zero Preservatives
-                    </p>
-                    <p className="text-[11px] text-[#78716C] leading-snug">100% natural ingredients</p>
-                  </div>
-                </div>
-
-                {/* CTAs */}
-                <div className="mt-7 flex flex-wrap items-center gap-3.5">
-                  <a
-                    href="#menu"
-                    className="inline-flex items-center gap-2 rounded-md bg-[#9B2C2C] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:bg-[#7B1F23] hover:shadow focus:ring-2 focus:ring-[#9B2C2C]/30 active:scale-95"
-                  >
-                    <span>Explore Our Pickles & Menu</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </a>
-
-                  <Link
-                    to="/subscription"
-                    className="inline-flex items-center gap-2 rounded-md border border-[#E6D9C5] bg-[#FFFEFC] px-5 py-3 text-sm font-semibold text-[#1C1917] shadow-xs transition-all duration-150 hover:border-[#9B2C2C]/40 hover:bg-[#FDF2F2] hover:text-[#9B2C2C] active:scale-95"
-                  >
-                    <span>Weekly Meal Plans</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Right Column: Authentic Brand Heritage Emblem Card */}
-              <div className="lg:col-span-5 flex justify-center">
-                <div className="relative w-full max-w-sm rounded-2xl border border-[#E6D9C5] bg-gradient-to-b from-[#FFFEFC] via-[#FAF6EF] to-[#F3EBDD] p-6 shadow-md text-center">
-                  {/* Subtle red ribbon accent */}
-                  <div className="mx-auto flex h-36 w-36 items-center justify-center rounded-full bg-[#FAF6EF] p-2 ring-4 ring-[#9B2C2C]/10 shadow-inner">
-                    <img
-                      src={logo}
-                      alt="Manoharam Real Foods Official Logo"
-                      className="h-full w-full object-contain"
-                    />
-                  </div>
-
-                  <p className="mt-4 font-serif text-xl font-bold tracking-tight text-[#1C1917]">
-                    Manoharam Real Foods
-                  </p>
-                  <p className="font-serif text-sm italic text-[#9B2C2C] mt-1 font-medium">
-                    “Safe, as your mother's home.”
-                  </p>
-
-                  <div className="mt-5 rounded-xl border border-[#E6D9C5]/80 bg-[#FFFEFC]/80 p-3.5 text-xs text-[#44403C] space-y-2 text-left">
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck className="h-4 w-4 text-[#15803D] shrink-0" />
-                      <span>Prepared in small traditional batches</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-[#D97706] shrink-0" />
-                      <span>Slow-fermented in ceramic martabans</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Heart className="h-4 w-4 text-[#9B2C2C] shrink-0" />
-                      <span>Everyday safety and homely hygiene</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 pb-10">
+        {/* Today's Delivery Banner (if logged-in user has a scheduled meal today) */}
+        <TodayDeliveryBanner />
 
         {/* =========================================================================
-            ACTIVE SUBSCRIPTION & TODAY'S DELIVERY STATUS
+            FOOD-FIRST HERO SECTION
             ========================================================================= */}
-        <div className="px-4 sm:px-6 lg:px-8">
-          <TodayDeliveryBanner />
-          <SubscriptionSection />
-        </div>
+        <section className="relative overflow-hidden rounded-2xl border border-[#E6D9C5] bg-[#1C1917] shadow-sm">
+          {/* Main Food Photo Background / Visual */}
+          <div className="relative min-h-[300px] sm:min-h-[360px] md:min-h-[400px] w-full">
+            <img
+              src={heroBanner}
+              alt="Authentic South Indian pickles prepared in cold-pressed oil"
+              className="absolute inset-0 h-full w-full object-cover object-center"
+            />
+            {/* Soft Warm Gradient Overlay so text is crystal clear while food remains vivid */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/25 sm:w-3/4" />
 
-        {/* =========================================================================
-            BRAND HERITAGE & CRAFTSMANSHIP SECTION
-            ========================================================================= */}
-        <section className="my-10 border-y border-[#E6D9C5] bg-[#F3EBDD]/40 px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
-          <div className="mx-auto max-w-5xl text-center">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#9B2C2C]">
-              Our Heritage Promise
-            </span>
-            <h2 className="mt-1 font-serif text-2xl font-bold text-[#1C1917] sm:text-3xl">
-              “Safe, as your mother's home.”
-            </h2>
-            <p className="mx-auto mt-2 max-w-2xl text-xs sm:text-sm text-[#78716C] leading-relaxed">
-              In traditional South Indian homes, pickling and cooking were sacred culinary arts. We continue that legacy with pure ingredients and time-honoured patience.
-            </p>
-
-            <div className="mt-8 grid grid-cols-1 gap-6 text-left sm:grid-cols-3">
-              <div className="rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] p-5 shadow-xs">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FCE4E4] text-[#9B2C2C]">
-                  <Flame className="h-5 w-5" />
-                </div>
-                <h3 className="mt-3.5 font-serif text-base font-bold text-[#1C1917]">
-                  Time-Honoured Recipes
-                </h3>
-                <p className="mt-1.5 text-xs text-[#78716C] leading-relaxed">
-                  Passed down through generations, slow-fermented in ceramic jars with traditional aromatic spices.
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] p-5 shadow-xs">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FEF7DA] text-[#D97706]">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <h3 className="mt-3.5 font-serif text-base font-bold text-[#1C1917]">
-                  Pure Cold-Pressed Oils
-                </h3>
-                <p className="mt-1.5 text-xs text-[#78716C] leading-relaxed">
-                  Prepared using 100% natural wood-pressed sesame (gingelly) and groundnut oils — never refined or bleached.
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] p-5 shadow-xs">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#DCFCE7] text-[#15803D]">
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
-                <h3 className="mt-3.5 font-serif text-base font-bold text-[#1C1917]">
-                  Natural Preservation
-                </h3>
-                <p className="mt-1.5 text-xs text-[#78716C] leading-relaxed">
-                  Gently sun-cured with rock salt, natural turmeric, and cold-pressed oil. Completely free from artificial preservatives.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* =========================================================================
-            À LA CARTE PRODUCTS & PICKLES CATALOG
-            ========================================================================= */}
-        <section id="menu" className="mt-8 px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#9B2C2C]">
-                À La Carte Selection
+            {/* Concise Hero Content */}
+            <div className="relative z-10 flex min-h-[300px] sm:min-h-[360px] md:min-h-[400px] max-w-xl flex-col justify-center p-5 sm:p-8 md:p-10">
+              <span className="font-serif text-xs sm:text-sm italic font-medium text-[#FDEBB2]">
+                “Safe, as your mother's home.”
               </span>
-              <h2 className="mt-0.5 font-serif text-2xl font-bold text-[#1C1917] sm:text-3xl">
-                Traditional Pickles & Delicacies
-              </h2>
-              <p className="mt-1 text-xs sm:text-sm text-[#78716C]">
-                Order individual jars whenever you like — delivered fresh to your doorstep.
+
+              <h1 className="mt-2 font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight">
+                Authentic Homemade South Indian Pickles & Meals
+              </h1>
+
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <a
+                  href="#products"
+                  className="inline-flex items-center gap-1.5 rounded-md bg-[#9B2C2C] px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs hover:bg-[#7B1F23] active:scale-95 transition-all"
+                >
+                  <span>Shop Pickles</span>
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+
+                <Link
+                  to="/subscription"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-white/30 bg-black/40 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white backdrop-blur-xs hover:bg-white/20 active:scale-95 transition-all"
+                >
+                  <CalendarCheck className="h-4 w-4 text-[#FDEBB2]" />
+                  <span>Weekly Plans</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            CATEGORY QUICK TILES — Visual Food Categories
+            ========================================================================= */}
+        <section aria-label="Product categories" className="grid grid-cols-2 gap-3 sm:gap-4">
+          <a
+            href="#products"
+            onClick={() => setActiveCategory('Pickles')}
+            className="group flex items-center gap-3 rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] p-3 sm:p-4 shadow-xs hover:border-[#9B2C2C]/40 hover:shadow-sm transition-all"
+          >
+            <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg bg-[#F3EBDD]">
+              <img
+                src={mangoPickleThumb}
+                alt="Traditional Pickles"
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            </div>
+            <div>
+              <p className="font-serif text-sm sm:text-base font-bold text-[#1C1917] group-hover:text-[#9B2C2C] transition-colors">
+                Pickles & Thokku
+              </p>
+              <p className="text-[11px] text-[#78716C]">
+                {allProducts.length > 0 ? `${allProducts.length} varieties` : 'Homemade jars'}
               </p>
             </div>
+          </a>
 
-            {/* Quick Search trigger link */}
-            <Link
-              to="/search"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#9B2C2C] hover:text-[#7B1F23]"
-            >
-              <Search className="h-3.5 w-3.5" />
-              <span>Search products</span>
-            </Link>
+          <Link
+            to="/subscription"
+            className="group flex items-center gap-3 rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] p-3 sm:p-4 shadow-xs hover:border-[#9B2C2C]/40 hover:shadow-sm transition-all"
+          >
+            <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-lg bg-[#F3EBDD]">
+              <img
+                src={traditionalMealsThumb}
+                alt="Weekly Subscriptions"
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            </div>
+            <div>
+              <p className="font-serif text-sm sm:text-base font-bold text-[#1C1917] group-hover:text-[#9B2C2C] transition-colors">
+                Weekly Meal Plans
+              </p>
+              <p className="text-[11px] text-[#78716C]">
+                Scheduled home delivery
+              </p>
+            </div>
+          </Link>
+        </section>
+
+        {/* =========================================================================
+            PRODUCTS CATALOG — FOOD FIRST
+            ========================================================================= */}
+        <section id="products" className="scroll-mt-16">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#E6D9C5] pb-3">
+            <div>
+              <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#1C1917]">
+                Fresh Homemade Pickles
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Category Filter Tabs */}
+              {categories.length > 1 ? (
+                <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setActiveCategory(cat)}
+                      className={`shrink-0 rounded-md px-3 py-1.5 text-xs font-bold transition-all ${
+                        activeCategory === cat
+                          ? 'bg-[#9B2C2C] text-white shadow-xs'
+                          : 'border border-[#E6D9C5] bg-[#FFFEFC] text-[#44403C] hover:border-[#9B2C2C]/30 hover:bg-[#FDF2F2]'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
+              <Link
+                to="/search"
+                className="inline-flex items-center gap-1 rounded-md border border-[#E6D9C5] bg-[#FFFEFC] px-2.5 py-1.5 text-xs font-medium text-[#78716C] hover:text-[#9B2C2C] hover:border-[#9B2C2C]/30 transition-colors shrink-0"
+                aria-label="Search all products"
+              >
+                <Search className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Search</span>
+              </Link>
+            </div>
           </div>
 
-          {/* Category Filter Tabs */}
-          {categories.length > 1 ? (
-            <div className="scrollbar-none mt-5 flex gap-2 overflow-x-auto pb-1">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`shrink-0 rounded-md px-4 py-2 text-xs font-bold transition-all duration-150 ${
-                    activeCategory === cat
-                      ? 'bg-[#9B2C2C] text-white shadow-xs'
-                      : 'border border-[#E6D9C5] bg-[#FFFEFC] text-[#44403C] hover:border-[#9B2C2C]/30 hover:bg-[#FDF2F2]'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          ) : null}
-
-          {/* Products State Handling */}
+          {/* Products Grid: 2-column mobile, 3 tablet, 4 desktop */}
           {productsQuery.isLoading ? (
             <ProductsSkeleton />
           ) : productsQuery.isError ? (
@@ -305,13 +205,13 @@ export default function Home() {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-[#1C1917]">Could not load products</p>
-                  <p className="text-xs text-[#78716C]">Please check your network and try again.</p>
+                  <p className="text-xs text-[#78716C]">Please check your connection and retry.</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => productsQuery.refetch()}
-                className="flex shrink-0 items-center gap-1.5 rounded-md border border-[#9B2C2C]/30 bg-white px-4 py-2 text-xs font-bold text-[#9B2C2C] shadow-xs hover:bg-[#9B2C2C] hover:text-white transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-md border border-[#9B2C2C]/30 bg-white px-4 py-1.5 text-xs font-bold text-[#9B2C2C] shadow-xs hover:bg-[#9B2C2C] hover:text-white transition-colors"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
                 <span>Retry</span>
@@ -325,30 +225,29 @@ export default function Home() {
                   ? 'No products available yet'
                   : `No products in "${activeCategory}"`}
               </p>
-              <p className="text-xs text-[#78716C]">Check back soon or explore other categories.</p>
+              <p className="text-xs text-[#78716C]">Please check back soon.</p>
             </div>
           ) : (
             <>
-              {/* Product Grid: 2 cols on mobile, 3 on tablet, 4 on desktop */}
-              <div className="mt-6 grid grid-cols-2 gap-3 pb-4 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5 xl:grid-cols-4">
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
                 {visibleProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
 
               {productsQuery.hasNextPage ? (
-                <div className="mt-6 flex justify-center pb-4">
+                <div className="mt-6 flex justify-center">
                   <button
                     onClick={() => productsQuery.fetchNextPage()}
                     disabled={productsQuery.isFetchingNextPage}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-[#E6D9C5] bg-[#FFFEFC] px-6 py-2.5 text-xs font-bold text-[#1C1917] shadow-xs hover:border-[#9B2C2C]/30 hover:bg-[#FDF2F2] hover:text-[#9B2C2C] disabled:opacity-60 transition-all"
+                    className="inline-flex items-center gap-1.5 rounded-md border border-[#E6D9C5] bg-[#FFFEFC] px-5 py-2 text-xs font-bold text-[#1C1917] shadow-xs hover:border-[#9B2C2C]/30 hover:bg-[#FDF2F2] hover:text-[#9B2C2C] disabled:opacity-60 transition-all"
                   >
                     {productsQuery.isFetchingNextPage ? (
-                      'Loading more…'
+                      'Loading…'
                     ) : (
                       <>
                         <span>Load more products</span>
-                        <ChevronDown className="h-4 w-4" />
+                        <ChevronDown className="h-3.5 w-3.5" />
                       </>
                     )}
                   </button>
@@ -357,6 +256,66 @@ export default function Home() {
             </>
           )}
         </section>
+
+        {/* =========================================================================
+            WEEKLY SUBSCRIPTION BANNER (COMPACT & FOOD-FOCUSED)
+            ========================================================================= */}
+        <section className="overflow-hidden rounded-2xl border border-[#E6D9C5] bg-gradient-to-r from-[#FAF6EF] via-[#FFFDF9] to-[#F5ECE1] p-5 sm:p-6 shadow-xs">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
+            <div className="flex items-center gap-4">
+              <div className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-xl border border-[#E6D9C5] bg-[#F3EBDD] shadow-xs">
+                <img
+                  src={traditionalMealsThumb}
+                  alt="Weekly meal subscriptions"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#9B2C2C]">
+                  Scheduled Service
+                </span>
+                <h3 className="font-serif text-base sm:text-lg font-bold text-[#1C1917]">
+                  Weekly Meal & Pickle Subscriptions
+                </h3>
+                <p className="mt-0.5 text-xs text-[#78716C]">
+                  Fresh home-style delivery on your schedule. 1-tap date skipping anytime.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              to="/subscription"
+              className="inline-flex items-center gap-1.5 rounded-md bg-[#9B2C2C] px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#7B1F23] active:scale-95 transition-all shrink-0 w-full sm:w-auto justify-center"
+            >
+              <span>Explore Weekly Plans</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            COMPACT BRAND NOTE
+            ========================================================================= */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-xl border border-[#E6D9C5]/80 bg-[#FFFEFC] px-5 py-4 text-center sm:text-left shadow-2xs">
+          <div className="flex items-center gap-3">
+            <img
+              src={logo}
+              alt="Manoharam Real Foods"
+              className="h-10 w-auto object-contain shrink-0"
+            />
+            <div>
+              <p className="font-serif text-sm font-bold text-[#1C1917]">
+                Manoharam Real Foods
+              </p>
+              <p className="font-serif text-xs italic text-[#9B2C2C]">
+                “Safe, as your mother's home.”
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-[#78716C] max-w-md">
+            Prepared in small batches with 100% cold-pressed oils, sun-cured spices, and pure homestyle care. Zero artificial preservatives.
+          </p>
+        </div>
       </div>
     </AppShell>
   )
@@ -364,11 +323,11 @@ export default function Home() {
 
 function ProductsSkeleton() {
   return (
-    <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+    <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
       {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="overflow-hidden rounded-xl border border-[#E6D9C5] bg-white p-3 shadow-xs">
+        <div key={i} className="overflow-hidden rounded-xl border border-[#E6D9C5] bg-white p-2.5 sm:p-3 shadow-xs">
           <div className="aspect-square w-full animate-pulse rounded-lg bg-[#F3EBDD]" />
-          <div className="mt-3 space-y-2">
+          <div className="mt-2.5 space-y-1.5">
             <div className="h-3 w-3/4 animate-pulse rounded bg-[#F3EBDD]" />
             <div className="h-3 w-1/3 animate-pulse rounded bg-[#F3EBDD]" />
           </div>

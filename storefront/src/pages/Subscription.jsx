@@ -5,10 +5,6 @@ import {
   CalendarClock,
   ChevronRight,
   Clock3,
-  Sparkles,
-  ShieldCheck,
-  CalendarX2,
-  RotateCcw,
   LogIn,
   Utensils,
   RefreshCw,
@@ -111,60 +107,23 @@ export default function Subscription() {
           </section>
         ) : null}
 
-        {/* Hero Banner with Brand Messaging */}
-        <div className="relative overflow-hidden rounded-2xl border border-[#E6D9C5] bg-gradient-to-br from-[#FAF6EF] via-[#FFFDF9] to-[#F5ECE1] p-5 sm:p-8 shadow-xs">
-          <div className="max-w-2xl">
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 rounded-md bg-[#FCE4E4] px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-[#9B2C2C]">
-                <Sparkles className="h-3 w-3" />
-                Scheduled Heritage Kitchen
-              </span>
-              <span className="font-serif text-xs italic text-[#78716C]">
-                “Safe, as your mother's home.”
-              </span>
-            </div>
-
-            <h1 className="mt-3 font-serif text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-[#1C1917]">
-              Freshly Delivered Weekly Meal & Pickle Plans
-            </h1>
-
-            <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#57534E]">
-              Pure, wholesome traditional South Indian comfort food crafted in small batches using 100% cold-pressed oils. Enjoy timely doorstep deliveries on a schedule that fits your daily routine, with full freedom to pause or skip dates anytime.
-            </p>
-
-            {/* Trust Highlights */}
-            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-semibold text-[#78716C]">
-              <span className="flex items-center gap-1.5">
-                <CalendarX2 className="h-3.5 w-3.5 text-[#9B2C2C]" />
-                Skip any delivery date with 1 tap
-              </span>
-              <span className="flex items-center gap-1.5">
-                <RotateCcw className="h-3.5 w-3.5 text-[#9B2C2C]" />
-                Pause or modify anytime
-              </span>
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck className="h-3.5 w-3.5 text-[#9B2C2C]" />
-                100% Cold-Pressed Oils • Zero Preservatives
-              </span>
-            </div>
+        {/* Header & Subtitle */}
+        <div className="border-b border-[#E6D9C5] pb-4">
+          <div className="flex items-center gap-2">
+            <span className="font-serif text-xs italic font-medium text-[#9B2C2C]">
+              “Safe, as your mother's home.”
+            </span>
           </div>
+          <h1 className="mt-1 font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1917]">
+            Weekly Meal & Pickle Subscriptions
+          </h1>
+          <p className="mt-1 text-xs sm:text-sm text-[#78716C]">
+            Fresh traditional South Indian home cooking delivered on your schedule. Skip any date with 1 tap.
+          </p>
         </div>
 
         {/* Plans Catalog Section */}
         <section>
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-[#9B2C2C]">
-                Explore Our Rotations
-              </span>
-              <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#1C1917]">
-                Available Subscription Plans
-              </h2>
-              <p className="mt-0.5 text-xs text-[#78716C]">
-                Browse menus, nutrition, and weekly schedules. Login is only required when you subscribe.
-              </p>
-            </div>
-          </div>
 
           {/* Dietary Tabs */}
           <div className="mt-5">

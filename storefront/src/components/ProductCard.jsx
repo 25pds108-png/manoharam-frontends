@@ -88,29 +88,22 @@ export default function ProductCard({ product }) {
       </div>
 
       {/* Product Details */}
-      <div className="flex flex-1 flex-col justify-between p-3 sm:p-4">
+      <div className="flex flex-1 flex-col justify-between p-2.5 sm:p-3.5">
         <div>
-          {product.category ? (
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#9B2C2C]">
-              {product.category}
-            </p>
-          ) : null}
-
-          <h3 className="mt-0.5 line-clamp-1 font-serif text-sm font-bold text-[#1C1917] sm:text-base group-hover:text-[#9B2C2C] transition-colors">
+          <h3 className="line-clamp-2 font-serif text-xs sm:text-sm font-bold text-[#1C1917] group-hover:text-[#9B2C2C] transition-colors leading-snug">
             {product.name}
           </h3>
-
-          {product.description ? (
-            <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[#78716C]">
-              {product.description}
+          {unitText ? (
+            <p className="mt-0.5 text-[11px] font-medium text-[#78716C]">
+              {unitText}
             </p>
           ) : null}
         </div>
 
         {/* Price & Add Action */}
-        <div className="mt-3.5 flex items-center justify-between gap-2 border-t border-[#E6D9C5]/60 pt-2.5">
+        <div className="mt-2.5 flex items-center justify-between gap-1.5 border-t border-[#E6D9C5]/60 pt-2">
           <div>
-            <span className="font-serif text-base font-bold text-[#9B2C2C] sm:text-lg">
+            <span className="font-serif text-sm sm:text-base font-bold text-[#9B2C2C]">
               ₹{price.toFixed(0)}
             </span>
           </div>
@@ -120,7 +113,7 @@ export default function ProductCard({ product }) {
             onClick={handleQuickAdd}
             disabled={isAddingLocal}
             aria-label={`Add ${product.name} to cart`}
-            className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-bold transition-all duration-150 ${
+            className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-bold transition-all duration-150 ${
               justAdded
                 ? 'bg-[#15803D] text-white'
                 : 'border border-[#9B2C2C]/30 bg-[#FCE4E4]/60 text-[#9B2C2C] hover:bg-[#9B2C2C] hover:text-white active:scale-95'
@@ -128,12 +121,12 @@ export default function ProductCard({ product }) {
           >
             {justAdded ? (
               <>
-                <Check className="h-3.5 w-3.5" />
+                <Check className="h-3 w-3" />
                 <span>Added</span>
               </>
             ) : (
               <>
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-3 w-3" />
                 <span>Add</span>
               </>
             )}

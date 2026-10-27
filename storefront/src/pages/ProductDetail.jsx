@@ -230,21 +230,7 @@ export default function ProductDetail() {
                 </p>
               ) : null}
 
-              {/* Culinary Trust Highlights */}
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <div className="rounded-lg border border-[#E6D9C5] bg-[#FAF6EF] p-2.5">
-                  <p className="font-serif text-xs font-bold text-[#1C1917]">Cold-Pressed</p>
-                  <p className="text-[11px] text-[#78716C]">Pure sesame & groundnut</p>
-                </div>
-                <div className="rounded-lg border border-[#E6D9C5] bg-[#FAF6EF] p-2.5">
-                  <p className="font-serif text-xs font-bold text-[#1C1917]">Small-Batch</p>
-                  <p className="text-[11px] text-[#78716C]">Handcrafted in martabans</p>
-                </div>
-                <div className="col-span-2 sm:col-span-1 rounded-lg border border-[#E6D9C5] bg-[#FAF6EF] p-2.5">
-                  <p className="font-serif text-xs font-bold text-[#1C1917]">0% Chemicals</p>
-                  <p className="text-[11px] text-[#78716C]">Natural rock salt curing</p>
-                </div>
-              </div>
+
 
               {/* Desktop Quantity & Add to Cart */}
               <div className="mt-7 hidden items-center gap-4 sm:flex">
