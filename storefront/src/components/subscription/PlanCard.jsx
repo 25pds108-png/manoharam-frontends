@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, Utensils } from 'lucide-react'
 import { getPlanDietaryType } from '../../lib/planDietaryType'
+import { useAuth } from '../../context/AuthContext'
 
 function DietaryMark({ type }) {
   const isVeg = type === 'VEG'
@@ -19,6 +20,7 @@ function DietaryMark({ type }) {
 }
 
 export default function PlanCard({ plan }) {
+  const { isAuthenticated } = useAuth()
   const dietaryType = getPlanDietaryType(plan)
   const isVeg = dietaryType === 'VEG'
   const products = plan.products ?? []
@@ -27,16 +29,21 @@ export default function PlanCard({ plan }) {
   const pricePerWeek = Number(plan.price_per_week ?? 0)
   const pricePerDay = pricePerWeek / 7
 
+  const subscribeTo = isAuthenticated ? `/subscribe/${plan.id}` : '/login'
+  const subscribeState = isAuthenticated ? undefined : { from: { pathname: `/subscribe/${plan.id}` } }
+
   return (
-    <Link
-      to={`/plans/${plan.id}`}
+    <div
       className={[
         'group flex flex-col overflow-hidden rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] shadow-xs transition-all duration-200',
         'hover:-translate-y-0.5 hover:border-[#9B2C2C]/30 hover:shadow-md',
         isVeg ? 'border-l-4 border-l-[#15803D]' : 'border-l-4 border-l-[#9B2C2C]',
       ].join(' ')}
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F3EBDD]">
+      <Link
+        to={`/plans/${plan.id}`}
+        className="relative aspect-[4/3] w-full overflow-hidden bg-[#F3EBDD] block cursor-pointer"
+      >
         {heroImage ? (
           <img
             src={heroImage}
@@ -60,13 +67,15 @@ export default function PlanCard({ plan }) {
           ₹{pricePerWeek.toFixed(0)}
           <span className="font-normal text-[#78716C]">/wk</span>
         </div>
-      </div>
+      </Link>
 
       <div className="flex flex-1 flex-col justify-between p-3.5">
         <div>
-          <h3 className="font-serif text-sm font-bold text-[#1C1917] group-hover:text-[#9B2C2C] transition-colors line-clamp-1 sm:text-base">
-            {plan.name}
-          </h3>
+          <Link to={`/plans/${plan.id}`} className="block">
+            <h3 className="font-serif text-sm font-bold text-[#1C1917] group-hover:text-[#9B2C2C] transition-colors line-clamp-1 sm:text-base">
+              {plan.name}
+            </h3>
+          </Link>
           {previewText ? (
             <p className="mt-1 line-clamp-1 text-xs text-[#78716C]">{previewText}</p>
           ) : null}
@@ -78,12 +87,24 @@ export default function PlanCard({ plan }) {
               <p className="text-[11px] font-semibold text-[#78716C]">≈ ₹{pricePerDay.toFixed(0)}/day</p>
             ) : null}
           </div>
-          <span className="inline-flex items-center gap-1 rounded-md bg-[#FCE4E4] px-3 py-1 text-xs font-bold text-[#9B2C2C] group-hover:bg-[#9B2C2C] group-hover:text-white transition-colors">
-            <span>Subscribe</span>
-            <ArrowRight className="h-3 w-3" />
-          </span>
+          <div className="flex items-center gap-1.5">
+            <Link
+              to={`/plans/${plan.id}`}
+              className="text-[11px] font-semibold text-[#78716C] hover:text-[#9B2C2C] px-2 py-1 transition-colors"
+            >
+              Details
+            </Link>
+            <Link
+              to={subscribeTo}
+              state={subscribeState}
+              className="inline-flex items-center gap-1 rounded-md bg-[#FCE4E4] px-3 py-1 text-xs font-bold text-[#9B2C2C] hover:bg-[#9B2C2C] hover:text-white active:scale-95 transition-all shadow-2xs"
+            >
+              <span>Subscribe</span>
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
         </div>
       </div>
-    </Link>
+    </div>
   )
 }

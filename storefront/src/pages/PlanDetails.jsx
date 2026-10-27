@@ -15,10 +15,12 @@ import {
 import AppShell from '../components/layout/AppShell'
 import { getPlanDetails } from '../api/subscriptions'
 import { getPlanDietaryType } from '../lib/planDietaryType'
+import { useAuth } from '../context/AuthContext'
 
 export default function PlanDetails() {
   const { planId } = useParams()
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['subscription', 'plan-details', planId],
@@ -162,13 +164,24 @@ export default function PlanDetails() {
                 <span className="text-xs font-normal text-[#78716C]"> /week</span>
               </p>
             </div>
-            <Link
-              to={`/subscribe/${plan.id}`}
-              className="inline-flex items-center gap-1.5 rounded-md bg-[#9B2C2C] px-6 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#7B1F23] active:scale-95 transition-all"
-            >
-              <span>Continue to Schedule</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+            {isAuthenticated ? (
+              <Link
+                to={`/subscribe/${plan.id}`}
+                className="inline-flex items-center gap-1.5 rounded-md bg-[#9B2C2C] px-6 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#7B1F23] active:scale-95 transition-all"
+              >
+                <span>Continue to Schedule</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                state={{ from: { pathname: `/subscribe/${plan.id}` } }}
+                className="inline-flex items-center gap-1.5 rounded-md bg-[#9B2C2C] px-6 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-[#7B1F23] active:scale-95 transition-all"
+              >
+                <span>Sign In to Subscribe</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            )}
           </div>
         </div>
       ) : null}

@@ -27,11 +27,10 @@ export default function App() {
       <Route path="/product/:id" element={<ProductDetail />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      {/* Plan details: what a PlanCard tap opens. Backed by
-          get_subscription_details.php (no-auth), so it stays outside
-          RequireAuth on purpose — someone can read a plan's full menu
-          and nutrition before signing in. Deliberately not nested under
-          /subscribe, which is already the gated setup flow below. */}
+      {/* Plan details & subscription catalog: public so visitors can browse
+          all plans, rotation menus, and nutrition before signing in.
+          The actual subscribe setup flow (/subscribe/:planId) remains gated. */}
+      <Route path="/subscription" element={<Subscription />} />
       <Route path="/plans/:planId" element={<PlanDetails />} />
 
       {/* Gated behind login */}
@@ -67,14 +66,7 @@ export default function App() {
           </RequireAuth>
         }
       />
-      <Route
-        path="/subscription"
-        element={
-          <RequireAuth>
-            <Subscription />
-          </RequireAuth>
-        }
-      />
+
       {/* Subscribe flow: from a plan's details page (/plans/:planId,
           public), Continue drops here to choose start date/duration ->
           review the daily schedule and confirm. Both steps need the same

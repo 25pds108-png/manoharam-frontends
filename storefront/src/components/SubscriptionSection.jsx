@@ -5,15 +5,18 @@ import { AlertCircle, ArrowUpRight, CalendarX2, RefreshCw, Repeat, Utensils } fr
 import { formatStatusLabel } from './ui/Badge'
 import { listMySubscriptions, listSubscribableSalads } from '../api/subscriptions'
 import { getPlanDietaryType } from '../lib/planDietaryType'
+import { useAuth } from '../context/AuthContext'
 import CategoryPicker from './subscription/CategoryPicker'
 import PlanCard from './subscription/PlanCard'
 
 export default function SubscriptionSection() {
   const [category, setCategory] = useState('VEG')
+  const { isAuthenticated } = useAuth()
 
   const subscriptionsQuery = useQuery({
     queryKey: ['subscription', 'mine'],
     queryFn: listMySubscriptions,
+    enabled: isAuthenticated,
   })
 
   const liveSubscriptions = subscriptionsQuery.data?.subscriptions
@@ -23,7 +26,6 @@ export default function SubscriptionSection() {
   const saladsQuery = useQuery({
     queryKey: ['subscription', 'salads'],
     queryFn: listSubscribableSalads,
-    enabled: !subscriptionsQuery.isLoading,
   })
 
   const rawPlans = saladsQuery.data?.plans
@@ -51,7 +53,7 @@ export default function SubscriptionSection() {
     [subscribablePlans, category],
   )
 
-  if (subscriptionsQuery.isError) return null
+
 
   return (
     <div className="mt-8">
