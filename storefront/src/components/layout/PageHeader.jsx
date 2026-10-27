@@ -1,12 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 
-/**
- * Mobile: circular back button + centered title (matches the phone mockups).
- * Desktop: TopNav already provides navigation, so this collapses to a plain
- * left-aligned heading with no back button — clicking around via the navbar
- * is the desktop pattern, not browser-style back buttons floating in content.
- */
 export default function PageHeader({ title, onBack, fallbackPath = '/', right = null }) {
   const navigate = useNavigate()
 
@@ -20,19 +14,19 @@ export default function PageHeader({ title, onBack, fallbackPath = '/', right = 
   }
 
   return (
-    <header className="flex items-center gap-3 px-4 pt-6 pb-2 md:pt-8">
+    <header className="flex items-center gap-3 px-4 pt-5 pb-3 md:px-0 md:pt-6">
       <button
         type="button"
         onClick={handleBack}
         aria-label="Go back"
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm shadow-ink-900/5 md:hidden"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#E6D9C5] bg-[#FFFEFC] text-[#1C1917] shadow-xs hover:bg-[#FAF6EF] active:scale-95 transition-all md:hidden"
       >
-        <ChevronLeft className="h-5 w-5 text-ink-900" />
+        <ChevronLeft className="h-4.5 w-4.5" />
       </button>
-      <h1 className="flex-1 text-center font-display text-xl font-semibold text-ink-900 md:text-left md:text-2xl">
+      <h1 className="flex-1 font-serif text-xl font-bold text-[#1C1917] md:text-2xl text-left truncate">
         {title}
       </h1>
-      <div className="h-10 w-10 shrink-0 md:hidden">{right}</div>
+      <div className="shrink-0">{right}</div>
     </header>
   )
 }

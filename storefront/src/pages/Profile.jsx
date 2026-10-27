@@ -13,11 +13,10 @@ import {
   MapPin,
   X,
   Check,
+  ShieldCheck,
 } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import AppShell from '../components/layout/AppShell'
-import Card from '../components/ui/Card'
-import Button from '../components/ui/Button'
 import AddressBookModal from '../components/AddressBookModal'
 import { useAuth } from '../context/AuthContext'
 import { getMyOrders } from '../api/orders'
@@ -136,127 +135,143 @@ export default function Profile() {
   }
 
   return (
-    <AppShell>
-      <div className="md:mx-auto md:max-w-xl md:pt-10">
-        {/* Profile banner */}
-        <div className="bg-gradient-to-b from-chili-500 to-chili-600 px-4 pb-14 pt-6 md:rounded-card md:pb-12">
-          <p className="font-display text-lg font-semibold text-cream-50/90">My Account</p>
-        </div>
-
-        <div className="-mt-10 px-4">
-          <Card className="flex items-center gap-4 p-5 shadow-lg shadow-chili-900/10">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-chili-500 font-display text-xl font-semibold text-cream-50 ring-4 ring-white">
+    <AppShell maxWidth="max-w-2xl">
+      <div className="px-4 py-6 sm:px-6">
+        {/* User Profile Card */}
+        <div className="rounded-2xl border border-[#E6D9C5] bg-[#FFFEFC] p-6 shadow-xs">
+          <div className="flex items-center gap-4">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#9B2C2C] font-serif text-2xl font-bold text-white ring-4 ring-[#FCE4E4]">
               {initials}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between">
-                <p className="truncate font-display text-lg font-semibold text-ink-900">
+                <h1 className="font-serif text-xl font-bold text-[#1C1917] truncate">
                   {profile?.name}
-                </p>
+                </h1>
                 <button
                   onClick={handleOpenEdit}
-                  className="rounded-full p-1 text-ink-400 hover:text-chili-500 transition-colors"
-                  aria-label="Edit profile"
+                  className="rounded-full p-1.5 text-[#78716C] hover:bg-[#FAF6EF] hover:text-[#9B2C2C] transition-colors"
+                  aria-label="Edit profile details"
                 >
                   <Edit2 className="h-4 w-4" />
                 </button>
               </div>
-              <p className="truncate text-sm text-ink-500">{profile?.email}</p>
+              <p className="text-xs text-[#78716C] truncate mt-0.5">{profile?.email}</p>
               {profile?.phone ? (
-                <p className="mt-1 flex items-center gap-1.5 text-xs text-ink-400">
-                  <Phone className="h-3 w-3" /> {profile.phone}
-                </p>
-              ) : null}
-              {profile?.address ? (
-                <p className="mt-1 flex items-start gap-1.5 text-xs text-ink-400 line-clamp-1">
-                  <MapPin className="h-3 w-3 shrink-0 mt-0.5" /> {profile.address}
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-[#44403C]">
+                  <Phone className="h-3 w-3 text-[#9B2C2C]" />
+                  <span>{profile.phone}</span>
                 </p>
               ) : null}
             </div>
-          </Card>
+          </div>
 
-          {/* Stats */}
-          <Card className="mt-4 flex divide-x divide-cream-200 p-0">
-            <div className="flex flex-1 items-center gap-3 p-5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-chili-50 text-chili-500">
-                <Receipt className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="font-display text-xl font-semibold text-ink-900">{orders.length}</p>
-                <p className="text-xs text-ink-500">Orders placed</p>
-              </div>
+          {profile?.address ? (
+            <div className="mt-4 border-t border-[#E6D9C5] pt-3 flex items-start gap-2 text-xs text-[#44403C]">
+              <MapPin className="h-3.5 w-3.5 text-[#9B2C2C] shrink-0 mt-0.5" />
+              <p className="line-clamp-2">{profile.address}</p>
             </div>
-            <div className="flex flex-1 items-center gap-3 p-5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-chili-50 text-chili-500">
-                <Wallet className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="font-display text-xl font-semibold text-ink-900">
-                  ₹{totalSpent.toFixed(0)}
-                </p>
-                <p className="text-xs text-ink-500">Total spent</p>
-              </div>
-            </div>
-          </Card>
+          ) : null}
+        </div>
 
-          <p className="mt-6 px-1 text-xs font-semibold uppercase tracking-wide text-ink-300">
-            Account & Security
-          </p>
-          <Card className="mt-2 divide-y divide-cream-200">
-            <Link
-              to="/orders"
-              className="flex items-center gap-3 p-4 transition-colors hover:bg-cream-50"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cream-100 text-ink-700">
-                <Package className="h-4.5 w-4.5" />
-              </div>
-              <span className="flex-1 font-medium text-ink-900">Order history</span>
-              <ChevronRight className="h-4 w-4 text-ink-300" />
-            </Link>
-            <Link
-              to="/subscription"
-              className="flex items-center gap-3 p-4 transition-colors hover:bg-cream-50"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cream-100 text-ink-700">
-                <CalendarCheck className="h-4.5 w-4.5" />
-              </div>
-              <span className="flex-1 font-medium text-ink-900">My subscription</span>
-              <ChevronRight className="h-4 w-4 text-ink-300" />
-            </Link>
-            <button
-              onClick={() => setAddressBookOpen(true)}
-              className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-cream-50"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cream-100 text-ink-700">
-                <MapPin className="h-4.5 w-4.5" />
-              </div>
-              <span className="flex-1 font-medium text-ink-900">Saved delivery addresses</span>
-              <ChevronRight className="h-4 w-4 text-ink-300" />
-            </button>
-            <button
-              onClick={() => {
-                setPasswordError(null)
-                setPasswordSuccess(null)
-                setPasswordOpen(true)
-              }}
-              className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-cream-50"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cream-100 text-ink-700">
-                <Lock className="h-4.5 w-4.5" />
-              </div>
-              <span className="flex-1 font-medium text-ink-900">Change password</span>
-              <ChevronRight className="h-4 w-4 text-ink-300" />
-            </button>
-          </Card>
+        {/* Spend & Order Stats */}
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] p-4 flex items-center gap-3 shadow-xs">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#FAF6EF] text-[#9B2C2C] border border-[#E6D9C5]">
+              <Receipt className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-serif text-lg font-bold text-[#1C1917]">{orders.length}</p>
+              <p className="text-[11px] text-[#78716C]">Orders placed</p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] p-4 flex items-center gap-3 shadow-xs">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#FAF6EF] text-[#9B2C2C] border border-[#E6D9C5]">
+              <Wallet className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-serif text-lg font-bold text-[#1C1917]">
+                ₹{totalSpent.toFixed(0)}
+              </p>
+              <p className="text-[11px] text-[#78716C]">Total purchases</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Account Quick Links */}
+        <p className="mt-6 font-serif text-xs font-bold uppercase tracking-wider text-[#78716C] px-1">
+          Account & Delivery Preferences
+        </p>
+
+        <div className="mt-2 divide-y divide-[#E6D9C5] rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] shadow-xs overflow-hidden">
+          <Link
+            to="/orders"
+            className="flex items-center gap-3 p-3.5 hover:bg-[#FAF6EF] transition-colors"
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#FAF6EF] text-[#44403C]">
+              <Package className="h-4 w-4" />
+            </div>
+            <span className="flex-1 text-xs font-bold text-[#1C1917]">My Orders & Invoices</span>
+            <ChevronRight className="h-4 w-4 text-[#A8A29E]" />
+          </Link>
+
+          <Link
+            to="/subscription"
+            className="flex items-center gap-3 p-3.5 hover:bg-[#FAF6EF] transition-colors"
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#FAF6EF] text-[#44403C]">
+              <CalendarCheck className="h-4 w-4" />
+            </div>
+            <span className="flex-1 text-xs font-bold text-[#1C1917]">My Meal Subscriptions</span>
+            <ChevronRight className="h-4 w-4 text-[#A8A29E]" />
+          </Link>
 
           <button
-            onClick={handleSignOut}
-            className="mt-6 mb-8 flex w-full items-center justify-center gap-2 rounded-pill border border-chili-200 bg-white py-3.5 font-semibold text-chili-500 transition-colors hover:bg-chili-50"
+            type="button"
+            onClick={() => setAddressBookOpen(true)}
+            className="flex w-full items-center gap-3 p-3.5 text-left hover:bg-[#FAF6EF] transition-colors"
           >
-            <LogOut className="h-4 w-4" />
-            Sign out
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#FAF6EF] text-[#44403C]">
+              <MapPin className="h-4 w-4" />
+            </div>
+            <span className="flex-1 text-xs font-bold text-[#1C1917]">Saved Delivery Addresses</span>
+            <ChevronRight className="h-4 w-4 text-[#A8A29E]" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setPasswordError(null)
+              setPasswordSuccess(null)
+              setPasswordOpen(true)
+            }}
+            className="flex w-full items-center gap-3 p-3.5 text-left hover:bg-[#FAF6EF] transition-colors"
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#FAF6EF] text-[#44403C]">
+              <Lock className="h-4 w-4" />
+            </div>
+            <span className="flex-1 text-xs font-bold text-[#1C1917]">Security & Password</span>
+            <ChevronRight className="h-4 w-4 text-[#A8A29E]" />
           </button>
         </div>
+
+        {/* Brand promise */}
+        <div className="mt-6 flex items-center gap-2.5 rounded-xl border border-[#E6D9C5] bg-[#FAF6EF] p-3 text-xs text-[#78716C]">
+          <ShieldCheck className="h-4 w-4 text-[#15803D] shrink-0" />
+          <p className="font-serif italic text-xs text-[#9B2C2C]">
+            “Safe, as your mother's home.”
+          </p>
+        </div>
+
+        {/* Sign Out Button */}
+        <button
+          onClick={handleSignOut}
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded-md border border-[#9B2C2C]/30 bg-[#FFFEFC] py-3 text-xs font-bold text-[#9B2C2C] shadow-xs hover:bg-[#FDF2F2] transition-colors"
+        >
+          <LogOut className="h-4 w-4" />
+          <span>Sign Out</span>
+        </button>
       </div>
 
       {/* Address Book Modal */}
@@ -267,87 +282,102 @@ export default function Profile() {
 
       {/* Edit Profile Modal */}
       {editOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/50 p-4">
-          <Card className="w-full max-w-sm p-5 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="font-display text-base font-semibold text-ink-900">Edit Profile</h3>
-              <button onClick={() => setEditOpen(false)} className="rounded-full p-1 text-ink-400 hover:bg-cream-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+          <div className="w-full max-w-sm rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] p-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#E6D9C5] pb-3">
+              <h3 className="font-serif text-base font-bold text-[#1C1917]">Edit Profile</h3>
+              <button
+                onClick={() => setEditOpen(false)}
+                className="rounded-full p-1 text-[#78716C] hover:bg-[#FAF6EF]"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
             <form onSubmit={handleSaveProfile} className="mt-4 space-y-3">
               <div>
-                <label className="text-xs font-semibold text-ink-700">Full Name</label>
+                <label className="text-xs font-bold text-[#44403C]">Full Name</label>
                 <input
                   type="text"
                   required
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-cream-300 p-2.5 text-sm text-ink-900 focus:border-chili-500 focus:outline-none"
+                  className="mt-1 w-full rounded-md border border-[#E6D9C5] bg-[#FAF6EF] p-2 text-xs text-[#1C1917] outline-none focus:border-[#9B2C2C]"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-ink-700">Phone</label>
+                <label className="text-xs font-bold text-[#44403C]">Phone</label>
                 <input
                   type="tel"
                   value={editPhone}
                   onChange={(e) => setEditPhone(e.target.value)}
                   placeholder="10-digit mobile number"
-                  className="mt-1 w-full rounded-xl border border-cream-300 p-2.5 text-sm text-ink-900 focus:border-chili-500 focus:outline-none"
+                  className="mt-1 w-full rounded-md border border-[#E6D9C5] bg-[#FAF6EF] p-2 text-xs text-[#1C1917] outline-none focus:border-[#9B2C2C]"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-ink-700">Delivery Address</label>
+                <label className="text-xs font-bold text-[#44403C]">Delivery Address</label>
                 <textarea
                   rows={2}
                   value={editAddress}
                   onChange={(e) => setEditAddress(e.target.value)}
-                  placeholder="Street, Door No, Area, City, Pincode"
-                  className="mt-1 w-full rounded-xl border border-cream-300 p-2.5 text-sm text-ink-900 focus:border-chili-500 focus:outline-none"
+                  placeholder="Door No, Street, Area, City, Pincode"
+                  className="mt-1 w-full rounded-md border border-[#E6D9C5] bg-[#FAF6EF] p-2 text-xs text-[#1C1917] outline-none focus:border-[#9B2C2C]"
                 />
               </div>
 
               {editError ? (
-                <p className="text-xs font-medium text-chili-500">{editError}</p>
+                <p className="text-xs font-bold text-[#9B2C2C]">{editError}</p>
               ) : null}
 
-              <div className="mt-5 flex gap-2 justify-end">
-                <Button type="button" variant="ghost" onClick={() => setEditOpen(false)} disabled={editSaving}>
+              <div className="mt-4 flex gap-2 justify-end pt-2 border-t border-[#E6D9C5]">
+                <button
+                  type="button"
+                  onClick={() => setEditOpen(false)}
+                  disabled={editSaving}
+                  className="rounded-md px-3 py-1.5 text-xs font-semibold text-[#78716C]"
+                >
                   Cancel
-                </Button>
-                <Button type="submit" loading={editSaving}>
-                  Save changes
-                </Button>
+                </button>
+                <button
+                  type="submit"
+                  disabled={editSaving}
+                  className="rounded-md bg-[#9B2C2C] px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#7B1F23]"
+                >
+                  {editSaving ? 'Saving…' : 'Save Changes'}
+                </button>
               </div>
             </form>
-          </Card>
+          </div>
         </div>
       ) : null}
 
       {/* Change Password Modal */}
       {passwordOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/50 p-4">
-          <Card className="w-full max-w-sm p-5 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="font-display text-base font-semibold text-ink-900">Change Password</h3>
-              <button onClick={() => setPasswordOpen(false)} className="rounded-full p-1 text-ink-400 hover:bg-cream-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+          <div className="w-full max-w-sm rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] p-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#E6D9C5] pb-3">
+              <h3 className="font-serif text-base font-bold text-[#1C1917]">Change Password</h3>
+              <button
+                onClick={() => setPasswordOpen(false)}
+                className="rounded-full p-1 text-[#78716C] hover:bg-[#FAF6EF]"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
             <form onSubmit={handleSavePassword} className="mt-4 space-y-3">
               <div>
-                <label className="text-xs font-semibold text-ink-700">Current Password</label>
+                <label className="text-xs font-bold text-[#44403C]">Current Password</label>
                 <input
                   type="password"
                   required
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Enter current password"
-                  className="mt-1 w-full rounded-xl border border-cream-300 p-2.5 text-sm text-ink-900 focus:border-chili-500 focus:outline-none"
+                  className="mt-1 w-full rounded-md border border-[#E6D9C5] bg-[#FAF6EF] p-2 text-xs text-[#1C1917] outline-none focus:border-[#9B2C2C]"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-ink-700">New Password</label>
+                <label className="text-xs font-bold text-[#44403C]">New Password</label>
                 <input
                   type="password"
                   required
@@ -355,30 +385,39 @@ export default function Profile() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Minimum 6 characters"
-                  className="mt-1 w-full rounded-xl border border-cream-300 p-2.5 text-sm text-ink-900 focus:border-chili-500 focus:outline-none"
+                  className="mt-1 w-full rounded-md border border-[#E6D9C5] bg-[#FAF6EF] p-2 text-xs text-[#1C1917] outline-none focus:border-[#9B2C2C]"
                 />
               </div>
 
               {passwordError ? (
-                <p className="text-xs font-medium text-chili-500">{passwordError}</p>
+                <p className="text-xs font-bold text-[#9B2C2C]">{passwordError}</p>
               ) : null}
 
               {passwordSuccess ? (
-                <p className="flex items-center gap-1.5 text-xs font-medium text-success-600">
+                <p className="flex items-center gap-1.5 text-xs font-bold text-[#15803D]">
                   <Check className="h-3.5 w-3.5" /> {passwordSuccess}
                 </p>
               ) : null}
 
-              <div className="mt-5 flex gap-2 justify-end">
-                <Button type="button" variant="ghost" onClick={() => setPasswordOpen(false)} disabled={passwordSaving}>
+              <div className="mt-4 flex gap-2 justify-end pt-2 border-t border-[#E6D9C5]">
+                <button
+                  type="button"
+                  onClick={() => setPasswordOpen(false)}
+                  disabled={passwordSaving}
+                  className="rounded-md px-3 py-1.5 text-xs font-semibold text-[#78716C]"
+                >
                   Cancel
-                </Button>
-                <Button type="submit" loading={passwordSaving}>
-                  Update password
-                </Button>
+                </button>
+                <button
+                  type="submit"
+                  disabled={passwordSaving}
+                  className="rounded-md bg-[#9B2C2C] px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#7B1F23]"
+                >
+                  {passwordSaving ? 'Updating…' : 'Update Password'}
+                </button>
               </div>
             </form>
-          </Card>
+          </div>
         </div>
       ) : null}
     </AppShell>

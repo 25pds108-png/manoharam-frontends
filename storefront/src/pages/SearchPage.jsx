@@ -1,12 +1,12 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Search as SearchIcon } from 'lucide-react'
+import { Search as SearchIcon, ChevronDown, ShoppingBag } from 'lucide-react'
 import AppShell from '../components/layout/AppShell'
 import PageHeader from '../components/layout/PageHeader'
 import ProductCard from '../components/ProductCard'
 import { searchProducts, listCategories } from '../api/products'
 
-function useDebouncedValue(value, delayMs = 350) {
+function useDebouncedValue(value, delayMs = 300) {
   const [debounced, setDebounced] = useState(value)
   useEffect(() => {
     const timeout = setTimeout(() => setDebounced(value), delayMs)
@@ -54,54 +54,56 @@ export default function SearchPage() {
   )
 
   return (
-    <AppShell>
-      <PageHeader title="Search" />
+    <AppShell maxWidth="max-w-7xl">
+      <PageHeader title="Discover Our Delicacies" />
 
-      <div className="px-4">
-        <div className="flex flex-col gap-3 md:max-w-2xl md:flex-row">
-          <div className="flex items-center gap-2 rounded-pill bg-white px-4 py-3 shadow-sm shadow-ink-900/5 md:flex-1">
-            <SearchIcon className="h-4 w-4 text-ink-300" />
+      <div className="px-4 py-4 sm:px-6 lg:px-8">
+        {/* Search & Filter Inputs */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+          <div className="flex flex-1 items-center gap-2.5 rounded-lg border border-[#E6D9C5] bg-[#FFFEFC] px-3.5 py-2.5 shadow-xs focus-within:border-[#9B2C2C] focus-within:ring-1 focus-within:ring-[#9B2C2C]">
+            <SearchIcon className="h-4 w-4 text-[#78716C] shrink-0" />
             <input
               autoFocus
               value={term}
               onChange={(e) => setTerm(e.target.value)}
-              placeholder="Search bowls, masalas, pickles..."
-              className="flex-1 bg-transparent text-sm text-ink-900 outline-none placeholder:text-ink-300"
+              placeholder="Search pickles, thokkus, powders, meals..."
+              className="flex-1 bg-transparent text-xs sm:text-sm text-[#1C1917] outline-none placeholder:text-[#A8A29E]"
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <input
               type="number"
               inputMode="numeric"
               placeholder="Min ₹"
               value={minPrice}
               onChange={(e) => setMinPrice(e.target.value)}
-              className="w-1/2 rounded-pill bg-white px-4 py-2 text-sm outline-none placeholder:text-ink-300 md:w-32"
+              className="w-24 rounded-lg border border-[#E6D9C5] bg-[#FFFEFC] px-3 py-2 text-xs text-[#1C1917] outline-none placeholder:text-[#A8A29E] focus:border-[#9B2C2C]"
             />
+            <span className="text-xs text-[#78716C]">—</span>
             <input
               type="number"
               inputMode="numeric"
               placeholder="Max ₹"
               value={maxPrice}
               onChange={(e) => setMaxPrice(e.target.value)}
-              className="w-1/2 rounded-pill bg-white px-4 py-2 text-sm outline-none placeholder:text-ink-300 md:w-32"
+              className="w-24 rounded-lg border border-[#E6D9C5] bg-[#FFFEFC] px-3 py-2 text-xs text-[#1C1917] outline-none placeholder:text-[#A8A29E] focus:border-[#9B2C2C]"
             />
           </div>
         </div>
 
-        {/* Category filter chips */}
+        {/* Category filter tabs */}
         {categories.length > 1 ? (
-          <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          <div className="scrollbar-none mt-4 flex gap-1.5 overflow-x-auto pb-1">
             {categories.map((cat) => (
               <button
                 key={cat}
                 type="button"
                 onClick={() => setSelectedCategory(cat)}
-                className={`shrink-0 rounded-pill px-3.5 py-1 text-xs font-semibold transition-colors ${
+                className={`shrink-0 rounded-md px-3.5 py-1.5 text-xs font-bold transition-all ${
                   selectedCategory === cat
-                    ? 'bg-chili-500 text-cream-50'
-                    : 'bg-white text-ink-700 hover:bg-cream-100 shadow-sm shadow-ink-900/5'
+                    ? 'bg-[#9B2C2C] text-white shadow-xs'
+                    : 'border border-[#E6D9C5] bg-[#FFFEFC] text-[#44403C] hover:border-[#9B2C2C]/30 hover:bg-[#FAF6EF]'
                 }`}
               >
                 {cat}
@@ -110,31 +112,55 @@ export default function SearchPage() {
           </div>
         ) : null}
 
-        <div className="mt-4 grid grid-cols-2 gap-3 pb-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {results.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+        {/* Search Results */}
+        <div className="mt-6">
+          {searchQuery.isLoading ? (
+            <div className="py-20 text-center">
+              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#9B2C2C] border-t-transparent" />
+              <p className="mt-3 text-xs font-semibold text-[#78716C]">Searching our kitchen…</p>
+            </div>
+          ) : results.length === 0 ? (
+            <div className="rounded-2xl border border-[#E6D9C5] bg-[#FFFEFC] px-6 py-16 text-center max-w-md mx-auto">
+              <ShoppingBag className="mx-auto h-8 w-8 text-[#A8A29E]" />
+              <h2 className="mt-3 font-serif text-lg font-bold text-[#1C1917]">
+                No matching delicacies found
+              </h2>
+              <p className="mt-1 text-xs text-[#78716C]">
+                Try adjusting your search terms or clearing price filters.
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="text-xs font-semibold text-[#78716C] mb-4">
+                Found {results.length} delicacy{results.length === 1 ? '' : 'ies'}
+              </p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
+                {results.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+
+              {searchQuery.hasNextPage ? (
+                <div className="mt-8 flex justify-center pb-6">
+                  <button
+                    onClick={() => searchQuery.fetchNextPage()}
+                    disabled={searchQuery.isFetchingNextPage}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-[#E6D9C5] bg-[#FFFEFC] px-6 py-2.5 text-xs font-bold text-[#1C1917] shadow-xs hover:border-[#9B2C2C]/30 hover:bg-[#FAF6EF] transition-all"
+                  >
+                    {searchQuery.isFetchingNextPage ? (
+                      'Loading…'
+                    ) : (
+                      <>
+                        <span>Load more results</span>
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              ) : null}
+            </>
+          )}
         </div>
-
-        {searchQuery.isLoading ? (
-          <p className="py-8 text-center text-ink-300">Searching…</p>
-        ) : null}
-
-        {!searchQuery.isLoading && results.length === 0 ? (
-          <p className="py-8 text-center text-ink-300">
-            {term ? `No results for "${term}".` : 'Start typing to search.'}
-          </p>
-        ) : null}
-
-        {searchQuery.hasNextPage ? (
-          <button
-            onClick={() => searchQuery.fetchNextPage()}
-            disabled={searchQuery.isFetchingNextPage}
-            className="mb-4 w-full rounded-pill bg-white py-3 text-sm font-semibold text-chili-500 shadow-sm shadow-ink-900/5"
-          >
-            {searchQuery.isFetchingNextPage ? 'Loading more…' : 'Load more'}
-          </button>
-        ) : null}
       </div>
     </AppShell>
   )

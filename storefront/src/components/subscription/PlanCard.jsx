@@ -2,10 +2,6 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Utensils } from 'lucide-react'
 import { getPlanDietaryType } from '../../lib/planDietaryType'
 
-/**
- * The small green/maroon square-and-dot mark used on Indian food
- * packaging and menus to indicate veg vs. non-veg at a glance.
- */
 function DietaryMark({ type }) {
   const isVeg = type === 'VEG'
   return (
@@ -13,36 +9,15 @@ function DietaryMark({ type }) {
       title={isVeg ? 'Vegetarian' : 'Non-vegetarian'}
       aria-label={isVeg ? 'Vegetarian' : 'Non-vegetarian'}
       className={[
-        'flex h-4 w-4 items-center justify-center rounded-[3px] border-[1.5px] bg-white',
-        isVeg ? 'border-green-600' : 'border-[#8b2e2e]',
+        'flex h-4 w-4 items-center justify-center rounded-[2px] border-[1.5px] bg-white',
+        isVeg ? 'border-[#15803D]' : 'border-[#9B2C2C]',
       ].join(' ')}
     >
-      <span className={['h-1.5 w-1.5 rounded-full', isVeg ? 'bg-green-600' : 'bg-[#8b2e2e]'].join(' ')} />
+      <span className={['h-1.5 w-1.5 rounded-full', isVeg ? 'bg-[#15803D]' : 'bg-[#9B2C2C]'].join(' ')} />
     </span>
   )
 }
 
-/**
- * Photo-forward plan card: the food is the actual product, so it leads.
- *
- * Changes from the previous version:
- * - A bottom gradient scrim sits behind the image badges so they stay
- *   legible regardless of what's in the photo, instead of relying on a
- *   flat white chip that can float awkwardly over a busy shot.
- * - Price now shows both /week and a computed /day figure — the weekly
- *   number is what's billed, the daily one is what people actually judge
- *   value against when comparing a subscription to buying groceries.
- * - The veg/non-veg signal now carries a hairline accent down the card
- *   body, not just the small square mark on the photo, so a grid of many
- *   cards stays scannable by dietary type at a glance — the same way a
- *   printed menu uses a colored rule next to a dish name.
- *
- * Links to /plans/:id — the public, no-auth plan-details page — rather
- * than straight into /subscribe/:id (SubscriptionSetup, gated behind
- * RequireAuth). That keeps browsing open to logged-out visitors, matching
- * Home's "public — browse freely" flow; the auth wall only kicks in once
- * someone actually taps Continue on the details page.
- */
 export default function PlanCard({ plan }) {
   const dietaryType = getPlanDietaryType(plan)
   const isVeg = dietaryType === 'VEG'
@@ -56,56 +31,56 @@ export default function PlanCard({ plan }) {
     <Link
       to={`/plans/${plan.id}`}
       className={[
-        'group flex flex-col overflow-hidden rounded-card bg-white shadow-md shadow-ink-900/5 ring-1 ring-ink-900/[0.04]',
-        'border-l-[3px] transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-ink-900/10',
-        isVeg ? 'border-l-green-600/70' : 'border-l-[#8b2e2e]/70',
+        'group flex flex-col overflow-hidden rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] shadow-xs transition-all duration-200',
+        'hover:-translate-y-0.5 hover:border-[#9B2C2C]/30 hover:shadow-md',
+        isVeg ? 'border-l-4 border-l-[#15803D]' : 'border-l-4 border-l-[#9B2C2C]',
       ].join(' ')}
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-chili-50">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#F3EBDD]">
         {heroImage ? (
           <img
             src={heroImage}
-            alt=""
+            alt={plan.name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-chili-300">
-            <Utensils className="h-7 w-7" />
+          <div className="flex h-full w-full items-center justify-center text-[#9B2C2C]/40">
+            <Utensils className="h-8 w-8" />
           </div>
         )}
 
-        {/* Scrim keeps the badges readable over any photo, bright or dark. */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/45 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/50 to-transparent" />
 
-        <div className="absolute left-2.5 top-2.5 rounded-md bg-white p-1 shadow-sm">
+        <div className="absolute left-2.5 top-2.5 rounded-md bg-white/95 p-1 shadow-xs backdrop-blur-xs">
           <DietaryMark type={dietaryType} />
         </div>
 
-        <div className="absolute bottom-2.5 right-2.5 flex items-baseline gap-1 rounded-pill bg-white px-2.5 py-1 text-xs font-bold text-ink-900 shadow-sm">
+        <div className="absolute bottom-2.5 right-2.5 flex items-baseline gap-1 rounded-md bg-white/95 px-2.5 py-1 text-xs font-bold text-[#1C1917] shadow-xs backdrop-blur-xs">
           ₹{pricePerWeek.toFixed(0)}
-          <span className="font-normal text-ink-400">/wk</span>
+          <span className="font-normal text-[#78716C]">/wk</span>
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-1 p-3.5">
-        <h3 className="font-display text-sm font-semibold leading-snug text-ink-900 line-clamp-2 sm:text-[15px]">
-          {plan.name}
-        </h3>
-        {previewText ? <p className="line-clamp-1 text-xs text-ink-400">{previewText}</p> : null}
+      <div className="flex flex-1 flex-col justify-between p-3.5">
+        <div>
+          <h3 className="font-serif text-sm font-bold text-[#1C1917] group-hover:text-[#9B2C2C] transition-colors line-clamp-1 sm:text-base">
+            {plan.name}
+          </h3>
+          {previewText ? (
+            <p className="mt-1 line-clamp-1 text-xs text-[#78716C]">{previewText}</p>
+          ) : null}
+        </div>
 
-        <div className="mt-auto flex items-end justify-between pt-2.5">
+        <div className="mt-3 flex items-center justify-between border-t border-[#E6D9C5]/60 pt-2.5">
           <div>
-            {products.length > 0 ? (
-              <p className="text-xs text-ink-300">{products.length} items</p>
-            ) : null}
             {pricePerWeek > 0 ? (
-              <p className="text-xs font-medium text-ink-500">≈₹{pricePerDay.toFixed(0)}/day</p>
+              <p className="text-[11px] font-semibold text-[#78716C]">≈ ₹{pricePerDay.toFixed(0)}/day</p>
             ) : null}
           </div>
-          <span className="flex shrink-0 items-center gap-1 rounded-pill bg-chili-50 px-3 py-1.5 text-xs font-semibold text-chili-500 transition-colors duration-200 group-hover:bg-chili-500 group-hover:text-cream-50">
-            Choose
-            <ArrowRight className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5" />
+          <span className="inline-flex items-center gap-1 rounded-md bg-[#FCE4E4] px-3 py-1 text-xs font-bold text-[#9B2C2C] group-hover:bg-[#9B2C2C] group-hover:text-white transition-colors">
+            <span>Subscribe</span>
+            <ArrowRight className="h-3 w-3" />
           </span>
         </div>
       </div>

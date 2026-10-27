@@ -50,9 +50,13 @@ export function CartProvider({ children }) {
     },
   })
 
-  const items = cartQuery.data?.cart_items ?? []
+  const rawItems = cartQuery.data?.cart_items
+  const items = useMemo(() => rawItems ?? [], [rawItems])
   const totalAmount = cartQuery.data?.total_amount ?? 0
-  const itemCount = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0)
+  const itemCount = useMemo(
+    () => items.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
+    [items]
+  )
 
   const value = useMemo(
     () => ({

@@ -1,76 +1,145 @@
-import { Link } from 'react-router-dom'
-import { Flame } from 'lucide-react'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Plus, Check } from 'lucide-react'
 import ProductImage from './ProductImage'
+import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
+
+/**
+ * Standard Indian vegetarian dietary badge (green dot in green border square).
+ */
+function VegBadge() {
+  return (
+    <span
+      title="100% Vegetarian"
+      aria-label="Vegetarian"
+      className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-[2px] border-[1.5px] border-[#15803D] bg-white"
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-[#15803D]" />
+    </span>
+  )
+}
 
 export default function ProductCard({ product }) {
-  const nutrition = product.nutrition
-  const hasCalories = Number(nutrition?.calories) > 0
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
+  const { addToCart, items } = useCart()
+  const [justAdded, setJustAdded] = useState(false)
+  const [isAddingLocal, setIsAddingLocal] = useState(false)
+
+  // Check if this product is already in the cart
+  const cartItem = items?.find((item) => Number(item.product_id) === Number(product.id))
+  const quantityInCart = cartItem ? Number(cartItem.quantity) : 0
+
+  const handleQuickAdd = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: { pathname: `/product/${product.id}` } } })
+      return
+    }
+
+    setIsAddingLocal(true)
+    try {
+      await addToCart({ productId: Number(product.id), quantity: 1 })
+      setJustAdded(true)
+      setTimeout(() => setJustAdded(false), 1500)
+    } catch (err) {
+      console.error('Failed to add to cart:', err)
+    } finally {
+      setIsAddingLocal(false)
+    }
+  }
+
+  const price = Number(product.selling_price || 0)
+  const unitText = product.quantity && product.unit ? `${product.quantity} ${product.unit}` : product.unit || ''
 
   return (
     <Link
       to={`/product/${product.id}`}
-      className="block overflow-hidden rounded-card bg-white shadow-sm shadow-ink-900/5 transition-all duration-200 active:scale-[0.98] md:hover:-translate-y-1 md:hover:shadow-lg md:hover:shadow-ink-900/10"
+      className="group flex flex-col overflow-hidden rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-[#9B2C2C]/30 hover:shadow-md"
     >
-      <div className="relative">
+      {/* Product Image Container */}
+      <div className="relative aspect-square w-full overflow-hidden bg-[#F3EBDD]/40">
         <ProductImage
           src={product.image_url}
           alt={product.name}
-          className="aspect-square w-full"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        {hasCalories ? (
-          <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-pill bg-ink-900/70 px-2 py-1 text-[11px] font-medium text-cream-50 backdrop-blur-sm">
-            <Flame className="h-3 w-3 text-amber-300" />
-            {Math.round(nutrition.calories)} kcal
+
+        {/* Dietary veg mark & Unit Badge */}
+        <div className="absolute top-2 left-2 flex items-center gap-1.5">
+          <div className="rounded-md bg-white/90 p-1 shadow-xs backdrop-blur-xs">
+            <VegBadge />
+          </div>
+          {unitText ? (
+            <span className="rounded-md bg-[#1C1917]/75 px-1.5 py-0.5 text-[10px] font-semibold text-[#FAF6EF] backdrop-blur-xs">
+              {unitText}
+            </span>
+          ) : null}
+        </div>
+
+        {quantityInCart > 0 ? (
+          <span className="absolute bottom-2 left-2 rounded-full bg-[#15803D] px-2 py-0.5 text-[10px] font-bold text-white shadow-xs">
+            {quantityInCart} in cart
           </span>
         ) : null}
       </div>
-      <div className="p-3 lg:p-4">
-        <h3 className="line-clamp-1 font-display text-base font-semibold text-ink-900 lg:text-lg">
-          {product.name}
-        </h3>
-        {product.description ? (
-          <p className="mt-0.5 line-clamp-1 text-sm text-ink-500 lg:text-base">{product.description}</p>
-        ) : null}
-        <p className="mt-1.5 font-semibold text-chili-500 lg:text-lg">
-          ₹{Number(product.selling_price).toFixed(0)}
-          <span className="ml-1 text-xs font-normal text-ink-300 lg:text-sm">/ {product.unit}</span>
-        </p>
 
-        {hasCalories ? (
-          <div className="mt-2.5 grid grid-cols-5 gap-1 border-t border-ink-900/[0.06] pt-2 lg:gap-1.5 lg:pt-2.5">
-            <NutrientStat label="Cal" value={nutrition.calories} />
-            <NutrientStat label="Pro" value={nutrition.protein} unit="g" />
-            <NutrientStat label="Carb" value={nutrition.carbs} unit="g" />
-            <NutrientStat label="Fat" value={nutrition.fat} unit="g" />
-            <NutrientStat label="Fib" value={nutrition.fiber} unit="g" />
+      {/* Product Details */}
+      <div className="flex flex-1 flex-col justify-between p-3 sm:p-4">
+        <div>
+          {product.category ? (
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#9B2C2C]">
+              {product.category}
+            </p>
+          ) : null}
+
+          <h3 className="mt-0.5 line-clamp-1 font-serif text-sm font-bold text-[#1C1917] sm:text-base group-hover:text-[#9B2C2C] transition-colors">
+            {product.name}
+          </h3>
+
+          {product.description ? (
+            <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[#78716C]">
+              {product.description}
+            </p>
+          ) : null}
+        </div>
+
+        {/* Price & Add Action */}
+        <div className="mt-3.5 flex items-center justify-between gap-2 border-t border-[#E6D9C5]/60 pt-2.5">
+          <div>
+            <span className="font-serif text-base font-bold text-[#9B2C2C] sm:text-lg">
+              ₹{price.toFixed(0)}
+            </span>
           </div>
-        ) : null}
+
+          <button
+            type="button"
+            onClick={handleQuickAdd}
+            disabled={isAddingLocal}
+            aria-label={`Add ${product.name} to cart`}
+            className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-bold transition-all duration-150 ${
+              justAdded
+                ? 'bg-[#15803D] text-white'
+                : 'border border-[#9B2C2C]/30 bg-[#FCE4E4]/60 text-[#9B2C2C] hover:bg-[#9B2C2C] hover:text-white active:scale-95'
+            }`}
+          >
+            {justAdded ? (
+              <>
+                <Check className="h-3.5 w-3.5" />
+                <span>Added</span>
+              </>
+            ) : (
+              <>
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </Link>
-  )
-}
-
-// Keeps every nutrient cell the same predictable width: whole numbers
-// stay whole, anything with a fraction is rounded to 1 decimal place.
-// Without this, values like 33.333333 or 16.666667 render wider than
-// their grid column and collide with the neighboring stat.
-function formatNutrient(value) {
-  const num = Number(value)
-  if (!Number.isFinite(num)) return '0'
-  const rounded = Math.round(num * 10) / 10
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
-}
-
-function NutrientStat({ label, value, unit = '' }) {
-  return (
-    <div className="flex min-w-0 flex-col items-center text-center">
-      <span className="truncate text-[10px] font-semibold tabular-nums text-ink-900 sm:text-xs lg:text-sm">
-        {formatNutrient(value)}
-        {unit}
-      </span>
-      <span className="text-[8px] font-medium uppercase tracking-wide text-ink-300 sm:text-[9px] lg:text-[10px]">
-        {label}
-      </span>
-    </div>
   )
 }

@@ -50,14 +50,15 @@ export default function SubscriptionDetails() {
   })
 
   const subscription = detailQuery.data?.subscription
-  const products = detailQuery.data?.products ?? []
+  const rawProducts = detailQuery.data?.products
   const deliverySchedule = detailQuery.data?.delivery_schedule ?? []
 
   const productsById = useMemo(() => {
     const map = new Map()
-    products.forEach((p) => map.set(p.id, p))
+    if (!rawProducts) return map
+    rawProducts.forEach((p) => map.set(p.id, p))
     return map
-  }, [products])
+  }, [rawProducts])
 
   const refreshAll = () => {
     detailQuery.refetch()

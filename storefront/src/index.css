@@ -1,62 +1,92 @@
 /* ---------------------------------------------------------------------
-   Fonts
-   - Display: Fraunces (free, warm/expressive serif — stand-in for Bogart)
-   - Body: Inter
-   (Font @import must precede the Tailwind @import per CSS spec.)
+   Manoharam Real Foods — Production Brand Design System
+   - Display & Headings: DM Serif Display (Heritage, Authentic, Editorial)
+   - Body & Interface: Plus Jakarta Sans (Clean, Highly Legible, Modern)
+   - Palette: Heritage Chili Red, Turmeric Gold, Warm Parchment & Rich Ink
    ------------------------------------------------------------------- */
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* Brand colors */
-  --color-chili-50: #FDECEC;
-  --color-chili-100: #FAD2D2;
-  --color-chili-200: #F2A4A4;
-  --color-chili-300: #E67878;
-  --color-chili-400: #D94F4F;
+  /* Heritage Chili Red (Primary Brand Color from logo) */
+  --color-chili-50: #FDF2F2;
+  --color-chili-100: #FCE4E4;
+  --color-chili-200: #F9C5C5;
+  --color-chili-300: #F49D9D;
+  --color-chili-400: #E55353;
   --color-chili-500: #C1272D;
-  --color-chili-600: #A31F25;
-  --color-chili-700: #84181D;
-  --color-chili-800: #651216;
-  --color-chili-900: #470C0F;
+  --color-chili-600: #9B2C2C;
+  --color-chili-700: #7B1F23;
+  --color-chili-800: #5C1518;
+  --color-chili-900: #3E0C0E;
 
-  --color-cream-50: #FFFDF8;
-  --color-cream-100: #FAF6EC;
-  --color-cream-200: #F3ECDB;
-  --color-cream-300: #E9DEC4;
-  --color-cream-400: #D8C7A3;
+  /* Turmeric Gold & Warm Saffron (Warm culinary accent) */
+  --color-amber-50: #FFFDF5;
+  --color-amber-100: #FEF7DA;
+  --color-amber-200: #FDEBB2;
+  --color-amber-300: #FBD778;
+  --color-amber-400: #F5B83D;
+  --color-amber-500: #D97706;
+  --color-amber-600: #B45309;
+  --color-amber-700: #92400E;
 
-  --color-ink-900: #241914;
-  --color-ink-700: #463530;
-  --color-ink-500: #6E5C55;
-  --color-ink-300: #A6968F;
+  /* Warm Parchment & Cream (Natural kitchen surfaces) */
+  --color-cream-50: #FFFEFC;
+  --color-cream-100: #FAF6EF;
+  --color-cream-200: #F3EBDD;
+  --color-cream-300: #E6D9C5;
+  --color-cream-400: #D1BFA5;
+  --color-cream-500: #BC9F7E;
 
-  --color-success-500: #2E7D32;
-  --color-success-100: #E3F1E4;
-  --color-warning-500: #C77700;
-  --color-warning-100: #FBF0DC;
+  /* Deep Espresso & Charcoal Ink (High-contrast typography) */
+  --color-ink-950: #14110F;
+  --color-ink-900: #1C1917;
+  --color-ink-700: #44403C;
+  --color-ink-500: #78716C;
+  --color-ink-400: #928B84;
+  --color-ink-300: #A8A29E;
+
+  /* Fresh Herbal Curry Leaf (Pure Veg / Freshness) */
+  --color-success-500: #15803D;
+  --color-success-100: #DCFCE7;
+  --color-warning-500: #D97706;
+  --color-warning-100: #FEF3C7;
   --color-danger-500: #C1272D;
-  --color-danger-100: #FDECEC;
+  --color-danger-100: #FDF2F2;
 
-  --font-display: 'Fraunces', serif;
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-serif: 'DM Serif Display', Georgia, serif;
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 
-  --radius-card: 1.5rem;
-  --radius-pill: 999px;
+  --radius-card: 1rem;
+  --radius-pill: 9999px;
 }
 
 @layer base {
   html {
     font-family: var(--font-sans);
+    color: var(--color-ink-900);
+    background-color: var(--color-cream-100);
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
     background-color: var(--color-cream-100);
     color: var(--color-ink-900);
+    min-height: 100vh;
   }
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
+    letter-spacing: -0.015em;
+  }
+
+  /* Accessible focus indicators */
+  :focus-visible {
+    outline: 2px solid var(--color-chili-500);
+    outline-offset: 2px;
   }
 }
 
@@ -67,3 +97,4 @@
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+

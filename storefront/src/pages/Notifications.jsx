@@ -1,31 +1,43 @@
 import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
+import {
+  Bell,
+  CheckCircle2,
+  Clock,
+  Truck,
+  PackageCheck,
+  XCircle,
+} from 'lucide-react'
 import AppShell from '../components/layout/AppShell'
-import Card from '../components/ui/Card'
+import PageHeader from '../components/layout/PageHeader'
 import { getMyOrders } from '../api/orders'
 import { formatStatusLabel } from '../components/ui/Badge'
 
-const STATUS_ICON = {
-  PENDING: '🛒',
-  CONFIRMED: '✅',
-  OUT_FOR_DELIVERY: '🚚',
-  DELIVERED: '📦',
-  CANCELLED: '❌',
+function StatusIcon({ status }) {
+  switch (status) {
+    case 'PENDING':
+      return <Clock className="h-5 w-5 text-[#D97706]" />
+    case 'CONFIRMED':
+      return <CheckCircle2 className="h-5 w-5 text-[#15803D]" />
+    case 'OUT_FOR_DELIVERY':
+      return <Truck className="h-5 w-5 text-[#9B2C2C]" />
+    case 'DELIVERED':
+      return <PackageCheck className="h-5 w-5 text-[#15803D]" />
+    case 'CANCELLED':
+      return <XCircle className="h-5 w-5 text-[#9B2C2C]" />
+    default:
+      return <Bell className="h-5 w-5 text-[#78716C]" />
+  }
 }
 
 const STATUS_MESSAGE = {
-  PENDING: "We've received your order and will confirm it shortly.",
-  CONFIRMED: "We'll dispatch your order soon.",
-  OUT_FOR_DELIVERY: 'Your order is on the way.',
-  DELIVERED: 'Your order has been delivered.',
+  PENDING: "We've received your order and our kitchen will begin preparation.",
+  CONFIRMED: 'Order confirmed and ingredients are being slow-cooked with care.',
+  OUT_FOR_DELIVERY: 'Your order is out for delivery — keep your phone handy.',
+  DELIVERED: 'Order successfully delivered. Enjoy your wholesome home meal!',
   CANCELLED: 'This order was cancelled.',
 }
 
-/**
- * There's no dedicated notifications/alerts API in the backend, so this
- * derives a simple activity feed from order history. It's a reasonable
- * stand-in, but a real notifications table + endpoint would let this also
- * reflect subscription approvals, etc. (as shown in the design reference).
- */
 export default function Notifications() {
   const { data, isLoading } = useQuery({
     queryKey: ['orders', 'mine'],
@@ -35,37 +47,60 @@ export default function Notifications() {
   const orders = data?.orders ?? []
 
   return (
-    <AppShell>
-      <div className="px-4 pt-6 md:mx-auto md:max-w-2xl md:pt-10">
-        <h1 className="font-display text-2xl font-semibold text-ink-900">Notifications</h1>
+    <AppShell maxWidth="max-w-2xl">
+      <PageHeader title="Order & Delivery Alerts" />
 
-        {isLoading ? <p className="py-12 text-center text-ink-300">Loading…</p> : null}
-
-        {!isLoading && orders.length === 0 ? (
-          <p className="py-12 text-center text-ink-500">Nothing here yet.</p>
+      <div className="px-4 py-4 sm:px-6">
+        {isLoading ? (
+          <div className="py-20 text-center">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#9B2C2C] border-t-transparent" />
+            <p className="mt-3 text-xs font-semibold text-[#78716C]">Loading alerts…</p>
+          </div>
         ) : null}
 
-        <div className="mt-4 space-y-3">
+        {!isLoading && orders.length === 0 ? (
+          <div className="flex flex-col items-center py-20 text-center max-w-md mx-auto">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#FAF6EF] text-[#78716C] border border-[#E6D9C5]">
+              <Bell className="h-7 w-7" />
+            </div>
+            <h2 className="mt-4 font-serif text-lg font-bold text-[#1C1917]">
+              No notifications yet
+            </h2>
+            <p className="mt-1 text-xs text-[#78716C]">
+              Updates regarding order confirmation, kitchen dispatch, and deliveries will appear here.
+            </p>
+          </div>
+        ) : null}
+
+        <div className="space-y-3">
           {orders.map((order) => (
-            <Card key={order.id} className="flex items-start gap-3 p-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cream-200 text-lg">
-                {STATUS_ICON[order.status] || '📦'}
+            <Link
+              key={order.id}
+              to={`/orders/${order.id}`}
+              className="group block rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] p-4 shadow-xs transition-all duration-150 hover:border-[#9B2C2C]/30 hover:shadow-md"
+            >
+              <div className="flex items-start gap-3.5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#FAF6EF] border border-[#E6D9C5]/80">
+                  <StatusIcon status={order.status} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <p className="font-serif text-sm font-bold text-[#1C1917] group-hover:text-[#9B2C2C] transition-colors">
+                      Order #{order.id} — {formatStatusLabel(order.status)}
+                    </p>
+                    <span className="text-[11px] text-[#A8A29E]">
+                      {new Date(order.order_date).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                      })}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#78716C] mt-1 leading-relaxed">
+                    {STATUS_MESSAGE[order.status] || ''}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="font-semibold text-ink-900">
-                  Order #{order.id} — {formatStatusLabel(order.status)}
-                </p>
-                <p className="text-sm text-ink-500">
-                  {STATUS_MESSAGE[order.status] || ''}
-                </p>
-                <p className="mt-1 text-xs text-ink-300">
-                  {new Date(order.order_date).toLocaleDateString('en-IN', {
-                    day: 'numeric',
-                    month: 'short',
-                  })}
-                </p>
-              </div>
-            </Card>
+            </Link>
           ))}
         </div>
       </div>
