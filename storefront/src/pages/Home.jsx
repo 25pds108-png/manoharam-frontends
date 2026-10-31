@@ -28,7 +28,6 @@ import { listSubscribableSalads } from '../api/subscriptions'
 import logo from '../assets/logo.png'
 import heroBanner from '../assets/food/hero-banner.jpg'
 import campaignThali from '../assets/food/campaign-thali.jpg'
-import heritageMaster from '../assets/food/heritage-master.jpg'
 import WelcomeModal from '../components/WelcomeModal'
 
 export default function Home() {
@@ -517,137 +516,7 @@ export default function Home() {
         </section>
 
         {/* =========================================================================
-            4. OUR KITCHEN HERITAGE — IMMERSIVE EDITORIAL BRAND EXPERIENCE
-            - One dominant master photograph of grandmother grinding spices on ammi kal
-            - Expressive brand statement: "Tradition You Can Taste. Purity You Can Trust."
-            - Emotional motto: "Safe, as your mother's home."
-            - Integrated typographic craft benchmarks (NO generic card boxes)
-            - Distinct authentic, editorial personality honoring traditional food culture
-            ========================================================================= */}
-        <section className="px-4 sm:px-6 lg:px-8">
-          <div className="rounded-[2.5rem] border border-amber-900/12 bg-gradient-to-b from-[#FAF4EB] via-[#F8F2E6] to-[#FAF4EB] p-8 sm:p-12 lg:p-16 shadow-sm relative overflow-hidden">
-            {/* Subtle paper grain / Kolam watermark */}
-            <div
-              className="absolute inset-0 opacity-[0.035] pointer-events-none select-none"
-              style={{
-                backgroundImage: 'radial-gradient(#9B2C2C 0.75px, transparent 0.75px)',
-                backgroundSize: '20px 20px',
-              }}
-            />
-
-            {/* Header: Editorial Eyebrow + Expressive Brand Statement + Kolam Divider */}
-            <div className="mx-auto max-w-3xl text-center space-y-3 relative z-10">
-              <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-800 block">
-                Our Kitchen Heritage
-              </span>
-              <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-ink-900 tracking-tight leading-tight">
-                Tradition You Can Taste. Purity You Can Trust.
-              </h2>
-              <div className="flex justify-center opacity-60 my-3">
-                <HeritageKolamDivider className="max-w-xs text-amber-800/40" />
-              </div>
-            </div>
-
-            {/* Editorial Story Spread: Master Photograph + Integrated Narrative & Craft Standards */}
-            <div className="mt-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center relative z-10">
-              {/* Left Column (6 Cols): Single Dominant Master Photograph */}
-              <div className="lg:col-span-6 relative group">
-                <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border-2 border-cream-50 shadow-xl bg-cream-200">
-                  <img
-                    src={heritageMaster}
-                    alt="Authentic South Indian grandmother grinding heirloom spices on traditional ammi kal stone hearth at dawn"
-                    className="h-full w-full object-cover object-center transition-transform duration-1000 ease-out group-hover:scale-103"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-ink-950/70 via-ink-950/15 to-transparent pointer-events-none" />
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-cream-100 text-xs">
-                    <span className="font-medium tracking-wide">Thanjavur Kitchen Dawn · Ammi Kal Stone Grinding</span>
-                    <span className="font-serif italic text-amber-300 text-sm">Centuries of Lineage</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column (6 Cols): Meaningful Motto, Short Story, and Integrated Craft Standards */}
-              <div className="lg:col-span-6 space-y-6">
-                {/* Pull Quote: Brand Motto */}
-                <div className="border-l-3 border-amber-600 pl-4 space-y-1">
-                  <p className="font-serif text-2xl sm:text-3xl italic text-chili-700 font-semibold leading-snug">
-                    “Safe, as your mother&apos;s home.”
-                  </p>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-amber-800 font-bold block">
-                    Our Uncompromising Purity Motto
-                  </span>
-                </div>
-
-                {/* Short Storytelling Copy (Concise & Evocative) */}
-                <p className="text-xs sm:text-sm text-ink-700 leading-relaxed font-sans font-normal">
-                  We grew up in homes where cooking was an act of quiet reverence. Centered on centuries-old grandmother recipes from Thanjavur and Chettinad, every meal, pickle, and podi is prepared with patient care—sun-drying local spices on open rooftops and cold-pressing oils in traditional wooden chekkus, without a single chemical preservative.
-                </p>
-
-                {/* Integrated Craft Benchmarks (Refined Typographic Layout — NO BOXES) */}
-                <div className="pt-4 border-t border-amber-900/10 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="space-y-1">
-                    <span className="font-serif text-base font-bold text-chili-600 block">
-                      01 / Wood-Pressed
-                    </span>
-                    <p className="text-[11px] text-ink-600 leading-relaxed">
-                      Cold-extracted in slow wooden chekkus from native sesame and groundnut.
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="font-serif text-base font-bold text-amber-600 block">
-                      02 / Sun-Cured
-                    </span>
-                    <p className="text-[11px] text-ink-600 leading-relaxed">
-                      Salem turmeric and Guntur chillies sun-dried on open rooftops.
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="font-serif text-base font-bold text-ink-800 block">
-                      03 / Zero Additives
-                    </span>
-                    <p className="text-[11px] text-ink-600 leading-relaxed">
-                      Naturally preserved solely through unrefined rock salt and gingelly oil.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Authentic Craft Stats */}
-                <div className="pt-4 flex items-center justify-between sm:justify-start gap-8 border-t border-amber-900/10">
-                  <div>
-                    <span className="font-serif text-2xl sm:text-3xl font-bold text-chili-600 block tabular-nums">
-                      100%
-                    </span>
-                    <span className="text-[11px] text-ink-600 font-medium">
-                      Cold-Pressed Oils
-                    </span>
-                  </div>
-                  <div className="h-8 w-px bg-amber-900/15" />
-                  <div>
-                    <span className="font-serif text-2xl sm:text-3xl font-bold text-amber-600 block tabular-nums">
-                      0
-                    </span>
-                    <span className="text-[11px] text-ink-600 font-medium">
-                      Preservatives
-                    </span>
-                  </div>
-                  <div className="h-8 w-px bg-amber-900/15" />
-                  <div>
-                    <span className="font-serif text-2xl sm:text-3xl font-bold text-ink-900 block tabular-nums">
-                      30+
-                    </span>
-                    <span className="text-[11px] text-ink-600 font-medium">
-                      Family Recipes
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* =========================================================================
-            5. DISTINCTIVE VISUAL MOMENT AFTER BRAND STORY — CLOSING SIGNOFF
+            4. DISTINCTIVE VISUAL MOMENT — CLOSING SIGNOFF
             Intentional, elegant transition into the footer with brand signature
             ========================================================================= */}
         <div className="pt-2 pb-6 text-center space-y-3.5">
