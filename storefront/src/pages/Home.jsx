@@ -15,12 +15,10 @@ import {
   Sparkles,
   Truck,
   Clock,
-  Check,
 } from 'lucide-react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import AppShell from '../components/layout/AppShell'
 import ProductCard from '../components/ProductCard'
-import ProductImage from '../components/ProductImage'
 import TodayDeliveryBanner from '../components/TodayDeliveryBanner'
 import { ProductCardSkeleton } from '../components/ui/Skeleton'
 import Button from '../components/ui/Button'
@@ -29,16 +27,16 @@ import { listProducts, listCategories } from '../api/products'
 import { listSubscribableSalads } from '../api/subscriptions'
 import logo from '../assets/logo.png'
 import heroBanner from '../assets/food/hero-banner.jpg'
-import traditionalMeals from '../assets/food/traditional-meals.jpg'
+import campaignThali from '../assets/food/campaign-thali.jpg'
+import heritageMaster from '../assets/food/heritage-master.jpg'
 import WelcomeModal from '../components/WelcomeModal'
 
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState('All')
   const [visibleCount, setVisibleCount] = useState(8)
   const [isChangingCategory, setIsChangingCategory] = useState(false)
-  const [selectedPlanIndex, setSelectedPlanIndex] = useState(0)
 
-  // Subtle pointer parallax for the Hero section
+  // Subtle pointer parallax for the Hero section (strictly preserved)
   const [heroParallax, setHeroParallax] = useState({ x: 0, y: 0 })
   const categoryScrollRef = useRef(null)
 
@@ -103,12 +101,10 @@ export default function Home() {
     return rawPlans.filter((p) => p.status === 'ACTIVE' || !p.status)
   }, [plansQuery.data])
 
-  const featuredPlan = activePlans[selectedPlanIndex] || activePlans[0]
-
   const lowestPlanPrice = useMemo(() => {
-    if (!activePlans.length) return 350
+    if (!activePlans.length) return 310
     const prices = activePlans.map((p) => Number(p.price_per_week || 0)).filter((pr) => pr > 0)
-    return prices.length ? Math.min(...prices) : 350
+    return prices.length ? Math.min(...prices) : 310
   }, [activePlans])
 
   // Smooth category transition handler
@@ -129,7 +125,8 @@ export default function Home() {
         </div>
 
         {/* =========================================================================
-            1. HERO SECTION — PRESERVED IDENTITY WITH TACTILE POINTER PARALLAX
+            1. HERO SECTION — STRICTLY PRESERVED (NON-NEGOTIABLE)
+            All copy, dark photo, headline, logos, badges and CTAs kept identical.
             ========================================================================= */}
         <section className="relative px-4 sm:px-6 lg:px-8">
           <div
@@ -257,133 +254,99 @@ export default function Home() {
         </section>
 
         {/* =========================================================================
-            2. REDESIGNED EDITORIAL SUBSCRIPTION PROMOTION — SHOWN ONCE ONLY
-            Art-directed, appetizing meal photography, asymmetric balance, zero clutter
+            2. REIMAGINED SUBSCRIPTION BANNER — CINEMATIC FOOD ADVERTISING CAMPAIGN
+            - Food is the star: 65% photographic visual weight with exquisite South Indian feast
+            - Short, emotionally appealing headline: "A Taste of Home, Every Day."
+            - Asymmetric editorial composition with clear dynamic backend pricing & single CTA
             ========================================================================= */}
         <section className="px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-[2rem] border border-amber-900/20 bg-gradient-to-br from-[#1E1714] via-[#241A16] to-[#15110F] text-cream-50 shadow-xl">
-            {/* Subtle background warm ambient glow */}
-            <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+          <div className="relative overflow-hidden rounded-[2rem] border border-amber-900/15 bg-gradient-to-r from-[#FAF4EB] via-[#F6EFE5] to-[#FAF4EB] shadow-lg group">
+            {/* Subtle background Kolam paper grain */}
+            <div
+              className="absolute inset-0 opacity-[0.035] pointer-events-none select-none"
+              style={{
+                backgroundImage: 'radial-gradient(#9B2C2C 0.75px, transparent 0.75px)',
+                backgroundSize: '18px 18px',
+              }}
+            />
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch">
-              {/* Left Column: Narrative, Value Proposition & Clear CTA */}
-              <div className="lg:col-span-7 p-6 sm:p-10 md:p-12 lg:p-14 flex flex-col justify-between space-y-6 relative z-10">
-                <div className="space-y-4">
-                  {/* Category Eyebrow */}
-                  <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-950/40 px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-amber-300 backdrop-blur-xs">
-                    <CalendarCheck className="h-3.5 w-3.5 text-amber-400" />
-                    <span>Homestyle Meal Subscriptions</span>
+            <div className="grid grid-cols-1 lg:grid-cols-12 items-stretch min-h-[420px] relative z-10">
+              {/* Left Column (5 Cols on desktop): Refined Editorial Advertising Lockup */}
+              <div className="lg:col-span-5 order-2 lg:order-1 flex flex-col justify-center p-6 sm:p-8 lg:p-10 space-y-4">
+                <div className="inline-flex items-center gap-2 rounded-full border border-chili-600/30 bg-chili-50/90 px-3.5 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-chili-700 shadow-2xs self-start">
+                  <CalendarCheck className="h-3.5 w-3.5 text-chili-600" />
+                  <span>Weekly Meal Subscription</span>
+                </div>
+
+                <h2 className="font-serif text-3xl sm:text-4xl lg:text-[2.65rem] font-bold text-ink-900 leading-[1.12] tracking-tight">
+                  A Taste of Home, Every Day.
+                </h2>
+
+                <p className="text-xs sm:text-sm text-ink-700 leading-relaxed font-sans font-normal max-w-md">
+                  Wholesome South Indian thali rotations, slow-cooked fresh at dawn in 100% cold-pressed oils. Delivered steaming hot to your doorstep before lunch.
+                </p>
+
+                {/* Dynamic Value Strip from Backend */}
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-xs uppercase tracking-wider text-ink-500 font-semibold">Plans from</span>
+                    <span className="font-serif text-2xl sm:text-3xl font-extrabold text-chili-600">
+                      ₹{lowestPlanPrice}
+                    </span>
+                    <span className="text-xs text-ink-500 font-medium">/ week</span>
                   </div>
-
-                  {/* Strong & Concise Headline */}
-                  <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-cream-50 leading-tight">
-                    Wholesome South Indian Meals, Delivered Daily to Your Door.
-                  </h2>
-
-                  {/* Compact Benefit Narrative */}
-                  <p className="text-xs sm:text-sm text-cream-200/80 max-w-xl leading-relaxed font-sans font-normal">
-                    Slow-cooked every morning with 100% cold-pressed oils, native grains, and heritage recipes. Flexible weekly rotations, 1-tap date skipping, and zero chemical preservatives.
-                  </p>
-
-                  {/* Integrated Plan Highlight (Real backend data) */}
-                  {featuredPlan ? (
-                    <div className="rounded-xl border border-amber-500/25 bg-amber-950/30 p-3.5 sm:p-4 backdrop-blur-xs max-w-xl">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <span className="text-[10px] uppercase font-bold tracking-widest text-amber-400 block">
-                            Featured Weekly Rotation
-                          </span>
-                          <p className="font-serif text-sm sm:text-base font-bold text-cream-50 truncate mt-0.5">
-                            {featuredPlan.name}
-                          </p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <span className="font-serif text-lg sm:text-xl font-bold text-amber-400 tabular-nums">
-                            ₹{Number(featuredPlan.price_per_week || 350).toFixed(0)}
-                          </span>
-                          <span className="text-[10px] text-cream-300 block">/ week</span>
-                        </div>
-                      </div>
-
-                      {/* Interactive Plan Switcher if multiple plans exist */}
-                      {activePlans.length > 1 ? (
-                        <div className="mt-2.5 pt-2 border-t border-cream-100/10 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-                          <span className="text-[10px] text-cream-300/70 shrink-0 mr-1">Other plans:</span>
-                          {activePlans.slice(0, 3).map((plan, idx) => (
-                            <button
-                              key={`quick-plan-${plan.id}`}
-                              type="button"
-                              onClick={() => setSelectedPlanIndex(idx)}
-                              className={`button-press rounded-full px-2.5 py-0.5 text-[10px] font-semibold transition-all shrink-0 cursor-pointer ${
-                                selectedPlanIndex === idx
-                                  ? 'bg-amber-500 text-ink-950 font-bold'
-                                  : 'bg-cream-50/10 text-cream-200 hover:bg-cream-50/20'
-                              }`}
-                            >
-                              {plan.name.replace(/\[.*?\]\s*/g, '').slice(0, 24)}
-                            </button>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
-
-                  {/* Compact Value Markers */}
-                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-1 text-xs text-cream-200">
-                    <span className="flex items-center gap-1.5 font-medium">
-                      <Truck className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-                      Free Daily Delivery
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-600 font-medium">
+                    <span className="flex items-center gap-1.5">
+                      <Truck className="h-3.5 w-3.5 text-amber-600" /> Free Morning Delivery
                     </span>
-                    <span className="flex items-center gap-1.5 font-medium">
-                      <Clock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-                      1-Tap Date Skipping
-                    </span>
-                    <span className="flex items-center gap-1.5 font-medium">
-                      <ShieldCheck className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-                      Zero Preservatives
+                    <span className="text-cream-400 select-none">·</span>
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 text-amber-600" /> 1-Tap Date Skipping
                     </span>
                   </div>
                 </div>
 
-                {/* Single Clear Call To Action */}
-                <div className="pt-2 flex flex-wrap items-center gap-4">
+                {/* Single Clear CTA */}
+                <div className="pt-2 flex flex-wrap items-center gap-3.5">
                   <Link
                     to="/subscription"
-                    className="button-press spring-bounce inline-flex items-center gap-2.5 rounded-xl bg-chili-600 px-8 py-3.5 text-sm font-bold text-cream-50 shadow-lg shadow-chili-950/60 hover:bg-chili-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                    className="button-press spring-bounce inline-flex items-center gap-2.5 rounded-xl bg-chili-600 px-7 py-3.5 text-sm font-bold text-cream-50 shadow-md shadow-chili-900/25 hover:bg-chili-500 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 transition-all duration-200"
                   >
-                    <span>Explore Meal Plans</span>
-                    <ArrowRight className="h-4 w-4" />
+                    <span>Explore Weekly Plans</span>
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Link>
-                  <span className="text-[11px] text-cream-300/80 font-normal">
-                    Starting from ₹{lowestPlanPrice}/week · Pause or cancel anytime
+
+                  <span className="text-xs text-ink-500 font-medium">
+                    Pause or cancel anytime
                   </span>
                 </div>
               </div>
 
-              {/* Right Column: Large Appetizing Meal Photography */}
-              <div className="lg:col-span-5 relative min-h-[260px] sm:min-h-[340px] lg:min-h-full overflow-hidden bg-ink-950">
-                <ProductImage
-                  src={featuredPlan?.image_url}
-                  alt={featuredPlan?.name || 'South Indian homestyle meals'}
-                  category="Meals"
-                  className="h-full w-full object-cover min-h-[280px] lg:min-h-full transition-transform duration-700 ease-out hover:scale-104"
+              {/* Right Column (7 Cols on desktop): Dominant Culinary Campaign Photography */}
+              <div className="lg:col-span-7 order-1 lg:order-2 relative min-h-[300px] sm:min-h-[360px] lg:min-h-[440px] overflow-hidden">
+                <img
+                  src={campaignThali}
+                  alt="Lavish South Indian homestyle lunch feast served on fresh banana leaf"
+                  className="h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+                  loading="lazy"
                 />
+                {/* Soft directional gradient to seamlessly fuse photo with editorial container */}
+                <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-[#FAF4EB] via-[#FAF4EB]/30 to-transparent hidden lg:block pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-ink-950/60 via-transparent to-transparent pointer-events-none" />
 
-                {/* Subtle vignette gradients for seamless integration */}
-                <div className="absolute inset-0 bg-gradient-to-t from-ink-950/90 via-transparent to-transparent lg:hidden" />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#1E1714] via-transparent to-transparent hidden lg:block opacity-70" />
+                {/* Floating Campaign Stamps */}
+                <div className="absolute top-4 right-4 rounded-full bg-ink-950/75 backdrop-blur-md px-3.5 py-1.5 text-xs font-semibold text-cream-100 border border-cream-100/20 shadow-md">
+                  <span className="text-amber-400 font-bold mr-1.5">✦</span>Mon–Sun Fresh Homestyle Rotations
+                </div>
 
-                {/* Plan Badge Overlay on Photo */}
-                <div className="absolute bottom-4 left-4 right-4 sm:right-auto flex items-center gap-2 rounded-xl bg-ink-950/85 border border-amber-500/30 px-3.5 py-2 backdrop-blur-md shadow-lg">
-                  <Sparkles className="h-4 w-4 text-amber-400 shrink-0" />
-                  <div className="text-left">
-                    <p className="text-xs font-bold text-cream-50 leading-tight">
-                      Traditional Homestyle Rotation
-                    </p>
-                    <p className="text-[10px] text-amber-300/90">
-                      Cooked fresh every dawn in cold-pressed oil
-                    </p>
+                <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 rounded-xl bg-ink-950/80 backdrop-blur-md p-3 text-cream-100 border border-cream-100/15 shadow-lg max-w-xs">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
+                    <Droplets className="h-3.5 w-3.5" />
+                    <span>100% Cold-Pressed Chekku Oils</span>
                   </div>
+                  <p className="text-[11px] text-cream-200 mt-1 leading-snug">
+                    Slow-cooked at dawn. Never reused oil, zero artificial colors or flavor enhancers.
+                  </p>
                 </div>
               </div>
             </div>
@@ -391,22 +354,23 @@ export default function Home() {
         </section>
 
         {/* =========================================================================
-            3. INTEGRATED CATEGORY NAVIGATION & PRODUCT DISCOVERY
-            Single unified experience: compact interactive category rail + product grid
-            Zero duplicated cards, zero redundant filter bars
+            3. PRODUCT DISCOVERY — ATTRACTIVE SHOPPING-FOCUSED DELICACY CATALOGUE
+            - Sticky category rail with counts and smooth active states
+            - Refined 4:5 product cards with breathing room, bold prices, and tactile quick-add
+            - Outlined view more action with live counter
             ========================================================================= */}
         <section id="catalog" className="scroll-mt-20 px-4 sm:px-6 lg:px-8 space-y-6">
-          {/* Section Header with Search Action */}
+          {/* Header with Search Trigger */}
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-cream-300 pb-5">
             <div>
               <span className="text-xs font-bold uppercase tracking-[0.25em] text-chili-600 block">
-                Fresh From Our Kitchen
+                Artisanal Pantry
               </span>
               <h2 className="mt-1 font-serif text-2xl sm:text-3xl font-bold text-ink-900">
-                Artisanal Delicacies & Podis
+                Traditional Delicacies & Podis
               </h2>
               <p className="text-xs text-ink-500 mt-1">
-                Showing {filteredProducts.length} {filteredProducts.length === 1 ? 'delicacy' : 'delicacies'} crafted with cold-pressed oils & sun-cured spices
+                Showing {filteredProducts.length} {filteredProducts.length === 1 ? 'delicacy' : 'delicacies'} slow-crafted in artisanal small batches
               </p>
             </div>
 
@@ -421,51 +385,53 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Compact Category Navigation Bar (Single presentation, smooth interaction) */}
-          <div
-            ref={categoryScrollRef}
-            className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1 px-0.5 select-none"
-            role="tablist"
-            aria-label="Category navigation"
-          >
-            {categories.map((cat) => {
-              const count =
-                cat === 'All'
-                  ? allProducts.length
-                  : allProducts.filter((p) => p.category === cat).length
-              const isSelected = activeCategory === cat
+          {/* Sticky, Smooth Category Navigation Strip */}
+          <div className="sticky top-16 z-20 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 bg-cream-100/95 backdrop-blur-md py-2.5 border-b border-cream-200/80">
+            <div
+              ref={categoryScrollRef}
+              className="flex items-center gap-2 overflow-x-auto scrollbar-none select-none"
+              role="tablist"
+              aria-label="Category navigation"
+            >
+              {categories.map((cat) => {
+                const count =
+                  cat === 'All'
+                    ? allProducts.length
+                    : allProducts.filter((p) => p.category === cat).length
+                const isSelected = activeCategory === cat
 
-              return (
-                <button
-                  key={`cat-nav-${cat}`}
-                  type="button"
-                  role="tab"
-                  aria-selected={isSelected}
-                  onClick={() => handleSelectCategory(cat)}
-                  className={`spring-bounce button-press relative flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                    isSelected
-                      ? 'bg-chili-600 text-cream-50 shadow-sm ring-2 ring-chili-600/30'
-                      : 'border border-cream-300 bg-cream-50 text-ink-700 hover:border-chili-300 hover:bg-chili-50/60 hover:text-chili-600'
-                  }`}
-                >
-                  <span>{cat}</span>
-                  <span
-                    className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold tabular-nums ${
+                return (
+                  <button
+                    key={`cat-nav-${cat}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    onClick={() => handleSelectCategory(cat)}
+                    className={`spring-bounce button-press relative flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition-all shrink-0 cursor-pointer ${
                       isSelected
-                        ? 'bg-cream-50/25 text-cream-50'
-                        : 'bg-cream-200 text-ink-600'
+                        ? 'bg-chili-600 text-cream-50 shadow-sm ring-2 ring-chili-600/30'
+                        : 'border border-cream-300 bg-cream-50 text-ink-700 hover:border-chili-300 hover:bg-chili-50/60 hover:text-chili-600'
                     }`}
                   >
-                    {count}
-                  </span>
-                </button>
-              )
-            })}
+                    <span>{cat}</span>
+                    <span
+                      className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold tabular-nums ${
+                        isSelected
+                          ? 'bg-cream-50/25 text-cream-50'
+                          : 'bg-cream-200 text-ink-600'
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
-          {/* Catalog Grid with smooth category transition */}
+          {/* Product Cards Grid */}
           {productsQuery.isLoading ? (
-            <div className="grid grid-cols-2 gap-3.5 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
@@ -509,35 +475,40 @@ export default function Home() {
                 isChangingCategory ? 'opacity-40' : 'opacity-100'
               }`}
             >
-              <div className="grid grid-cols-2 gap-3.5 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
+              {/* Refined 4-Column Responsive Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                 {paginatedCatalog.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
 
-              {/* Load More Delicacies Action */}
+              {/* View More Outlined Button */}
               {hasMoreInLocalFilter ? (
-                <div className="pt-8 flex justify-center">
+                <div className="pt-10 flex flex-col items-center gap-3">
+                  <span className="text-xs font-semibold text-ink-500">
+                    Showing {Math.min(visibleCount, filteredProducts.length)} of {filteredProducts.length} delicacies
+                  </span>
+
                   <Button
                     variant="outline"
                     onClick={() => setVisibleCount((prev) => prev + 8)}
-                    className="button-press spring-bounce min-w-[220px] py-3 text-xs font-bold shadow-xs hover:border-chili-300 hover:text-chili-600"
+                    className="button-press spring-bounce min-w-[220px] py-2.5 text-xs font-bold border-cream-300 hover:border-chili-400 hover:text-chili-600 shadow-2xs"
                   >
-                    <span>View More Delicacies ({filteredProducts.length - visibleCount} remaining)</span>
-                    <ChevronDown className="h-4 w-4" />
+                    <span>View More Delicacies</span>
+                    <ChevronDown className="h-4 w-4 ml-1" />
                   </Button>
                 </div>
               ) : productsQuery.hasNextPage ? (
-                <div className="pt-8 flex justify-center">
+                <div className="pt-10 flex flex-col items-center gap-3">
                   <Button
                     variant="outline"
                     onClick={() => productsQuery.fetchNextPage()}
                     disabled={productsQuery.isFetchingNextPage}
                     loading={productsQuery.isFetchingNextPage}
-                    className="button-press spring-bounce min-w-[220px] py-3 text-xs font-bold"
+                    className="button-press spring-bounce min-w-[220px] py-2.5 text-xs font-bold border-cream-300 hover:border-chili-400 hover:text-chili-600 shadow-2xs"
                   >
                     <span>Load More From Kitchen</span>
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronDown className="h-4 w-4 ml-1" />
                   </Button>
                 </div>
               ) : null}
@@ -546,61 +517,159 @@ export default function Home() {
         </section>
 
         {/* =========================================================================
-            4. BRAND STORY & KITCHEN STANDARDS — OUR HERITAGE PROMISE
+            4. OUR KITCHEN HERITAGE — IMMERSIVE EDITORIAL BRAND EXPERIENCE
+            - One dominant master photograph of grandmother grinding spices on ammi kal
+            - Expressive brand statement: "Tradition You Can Taste. Purity You Can Trust."
+            - Emotional motto: "Safe, as your mother's home."
+            - Integrated typographic craft benchmarks (NO generic card boxes)
+            - Distinct authentic, editorial personality honoring traditional food culture
             ========================================================================= */}
         <section className="px-4 sm:px-6 lg:px-8">
-          <div className="rounded-[2rem] border border-cream-300 bg-cream-50 p-8 sm:p-12 lg:p-16 shadow-xs">
-            <div className="mx-auto max-w-3xl text-center space-y-3">
-              <span className="text-xs font-bold uppercase tracking-[0.25em] text-chili-600 block">
+          <div className="rounded-[2.5rem] border border-amber-900/12 bg-gradient-to-b from-[#FAF4EB] via-[#F8F2E6] to-[#FAF4EB] p-8 sm:p-12 lg:p-16 shadow-sm relative overflow-hidden">
+            {/* Subtle paper grain / Kolam watermark */}
+            <div
+              className="absolute inset-0 opacity-[0.035] pointer-events-none select-none"
+              style={{
+                backgroundImage: 'radial-gradient(#9B2C2C 0.75px, transparent 0.75px)',
+                backgroundSize: '20px 20px',
+              }}
+            />
+
+            {/* Header: Editorial Eyebrow + Expressive Brand Statement + Kolam Divider */}
+            <div className="mx-auto max-w-3xl text-center space-y-3 relative z-10">
+              <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-amber-800 block">
                 Our Kitchen Heritage
               </span>
-              <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-ink-900">
-                The Soul of Traditional South Indian Cooking
+              <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-ink-900 tracking-tight leading-tight">
+                Tradition You Can Taste. Purity You Can Trust.
               </h2>
-              <div className="flex justify-center opacity-70 my-2">
-                <HeritageKolamDivider className="max-w-xs text-cream-300" />
+              <div className="flex justify-center opacity-60 my-3">
+                <HeritageKolamDivider className="max-w-xs text-amber-800/40" />
               </div>
-              <p className="font-serif text-base italic text-chili-600 font-medium">
-                “Safe, as your mother&apos;s home.”
-              </p>
-              <p className="text-xs sm:text-sm text-ink-600 leading-relaxed max-w-2xl mx-auto font-sans">
-                We grew up in homes where cooking was an act of quiet reverence. No artificial essences, no chemical enhancers, no industrial shortcuts. Every jar of pickle, every pinch of podi, and every daily meal is prepared with patience, purity, and wholesome home care.
-              </p>
             </div>
 
-            <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 pt-8 border-t border-cream-300">
-              <div className="card-hover-effect space-y-3 rounded-2xl bg-cream-100/60 border border-cream-300/80 p-6 shadow-2xs">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-chili-100 text-chili-600 border border-chili-200 shadow-2xs">
-                  <Droplets className="h-6 w-6" />
+            {/* Editorial Story Spread: Master Photograph + Integrated Narrative & Craft Standards */}
+            <div className="mt-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center relative z-10">
+              {/* Left Column (6 Cols): Single Dominant Master Photograph */}
+              <div className="lg:col-span-6 relative group">
+                <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border-2 border-cream-50 shadow-xl bg-cream-200">
+                  <img
+                    src={heritageMaster}
+                    alt="Authentic South Indian grandmother grinding heirloom spices on traditional ammi kal stone hearth at dawn"
+                    className="h-full w-full object-cover object-center transition-transform duration-1000 ease-out group-hover:scale-103"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-ink-950/70 via-ink-950/15 to-transparent pointer-events-none" />
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-cream-100 text-xs">
+                    <span className="font-medium tracking-wide">Thanjavur Kitchen Dawn · Ammi Kal Stone Grinding</span>
+                    <span className="font-serif italic text-amber-300 text-sm">Centuries of Lineage</span>
+                  </div>
                 </div>
-                <h3 className="font-serif text-lg font-bold text-ink-900">100% Wood-Pressed Oils</h3>
-                <p className="text-xs text-ink-600 leading-relaxed font-sans">
-                  We use wood-pressed sesame and groundnut oils extracted from pristine local seeds in traditional granite chekkus, retaining all natural antioxidants and aroma.
-                </p>
               </div>
 
-              <div className="card-hover-effect space-y-3 rounded-2xl bg-cream-100/60 border border-cream-300/80 p-6 shadow-2xs">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 border border-amber-200 shadow-2xs">
-                  <Flame className="h-6 w-6" />
+              {/* Right Column (6 Cols): Meaningful Motto, Short Story, and Integrated Craft Standards */}
+              <div className="lg:col-span-6 space-y-6">
+                {/* Pull Quote: Brand Motto */}
+                <div className="border-l-3 border-amber-600 pl-4 space-y-1">
+                  <p className="font-serif text-2xl sm:text-3xl italic text-chili-700 font-semibold leading-snug">
+                    “Safe, as your mother&apos;s home.”
+                  </p>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-amber-800 font-bold block">
+                    Our Uncompromising Purity Motto
+                  </span>
                 </div>
-                <h3 className="font-serif text-lg font-bold text-ink-900">Sun-Cured & Stone-Ground</h3>
-                <p className="text-xs text-ink-600 leading-relaxed font-sans">
-                  Chillies, turmeric, and fenugreek dried under the tropical sun and slow-ground on granite stones to preserve volatile aromatic oils and medicinal value.
-                </p>
-              </div>
 
-              <div className="card-hover-effect space-y-3 rounded-2xl bg-cream-100/60 border border-cream-300/80 p-6 shadow-2xs">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-success-100 text-success-500 border border-success-200 shadow-2xs">
-                  <ShieldCheck className="h-6 w-6" />
-                </div>
-                <h3 className="font-serif text-lg font-bold text-ink-900">Zero Artificial Preservatives</h3>
-                <p className="text-xs text-ink-600 leading-relaxed font-sans">
-                  Naturally preserved solely through unrefined rock salt, cold-pressed gingelly oil, and natural sun fermentation. Safe for every child and elder.
+                {/* Short Storytelling Copy (Concise & Evocative) */}
+                <p className="text-xs sm:text-sm text-ink-700 leading-relaxed font-sans font-normal">
+                  We grew up in homes where cooking was an act of quiet reverence. Centered on centuries-old grandmother recipes from Thanjavur and Chettinad, every meal, pickle, and podi is prepared with patient care—sun-drying local spices on open rooftops and cold-pressing oils in traditional wooden chekkus, without a single chemical preservative.
                 </p>
+
+                {/* Integrated Craft Benchmarks (Refined Typographic Layout — NO BOXES) */}
+                <div className="pt-4 border-t border-amber-900/10 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <span className="font-serif text-base font-bold text-chili-600 block">
+                      01 / Wood-Pressed
+                    </span>
+                    <p className="text-[11px] text-ink-600 leading-relaxed">
+                      Cold-extracted in slow wooden chekkus from native sesame and groundnut.
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="font-serif text-base font-bold text-amber-600 block">
+                      02 / Sun-Cured
+                    </span>
+                    <p className="text-[11px] text-ink-600 leading-relaxed">
+                      Salem turmeric and Guntur chillies sun-dried on open rooftops.
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="font-serif text-base font-bold text-ink-800 block">
+                      03 / Zero Additives
+                    </span>
+                    <p className="text-[11px] text-ink-600 leading-relaxed">
+                      Naturally preserved solely through unrefined rock salt and gingelly oil.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Authentic Craft Stats */}
+                <div className="pt-4 flex items-center justify-between sm:justify-start gap-8 border-t border-amber-900/10">
+                  <div>
+                    <span className="font-serif text-2xl sm:text-3xl font-bold text-chili-600 block tabular-nums">
+                      100%
+                    </span>
+                    <span className="text-[11px] text-ink-600 font-medium">
+                      Cold-Pressed Oils
+                    </span>
+                  </div>
+                  <div className="h-8 w-px bg-amber-900/15" />
+                  <div>
+                    <span className="font-serif text-2xl sm:text-3xl font-bold text-amber-600 block tabular-nums">
+                      0
+                    </span>
+                    <span className="text-[11px] text-ink-600 font-medium">
+                      Preservatives
+                    </span>
+                  </div>
+                  <div className="h-8 w-px bg-amber-900/15" />
+                  <div>
+                    <span className="font-serif text-2xl sm:text-3xl font-bold text-ink-900 block tabular-nums">
+                      30+
+                    </span>
+                    <span className="text-[11px] text-ink-600 font-medium">
+                      Family Recipes
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </section>
+
+        {/* =========================================================================
+            5. DISTINCTIVE VISUAL MOMENT AFTER BRAND STORY — CLOSING SIGNOFF
+            Intentional, elegant transition into the footer with brand signature
+            ========================================================================= */}
+        <div className="pt-2 pb-6 text-center space-y-3.5">
+          <div className="flex justify-center opacity-60">
+            <HeritageKolamDivider className="max-w-xs text-amber-700/40" />
+          </div>
+
+          <div className="flex items-center justify-center gap-2.5">
+            <div className="h-8 w-8 rounded-full bg-cream-50 border border-cream-300 p-1 shadow-2xs">
+              <img src={logo} alt="Manoharam Kitchen Crest" className="h-full w-auto object-contain mx-auto" />
+            </div>
+            <span className="font-serif text-base font-bold text-ink-900 tracking-tight">
+              Manoharam Real Foods
+            </span>
+          </div>
+
+          <p className="font-serif italic text-xs sm:text-sm text-chili-700 max-w-md mx-auto">
+            “From our kitchen to your family table with pure reverence.”
+          </p>
+
+          <div className="h-px max-w-xs mx-auto bg-gradient-to-r from-transparent via-cream-300 to-transparent" />
+        </div>
       </div>
 
       {/* First-Time Welcome Modal */}

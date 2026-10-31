@@ -7,7 +7,15 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 
 /**
- * Standard Indian vegetarian / non-vegetarian dietary badge.
+ * Strips development prefixes like [Test] or [Verify] in customer-facing display.
+ */
+export function formatProductName(name) {
+  if (!name) return 'Artisanal Delicacy'
+  return name.replace(/^\[(Test|Verify)\]\s*/i, '').trim()
+}
+
+/**
+ * Standard Indian vegetarian / non-vegetarian dietary mark.
  */
 function DietaryBadge({ isVeg = true }) {
   return (
@@ -27,6 +35,23 @@ function DietaryBadge({ isVeg = true }) {
   )
 }
 
+/**
+ * Returns a single authentic craft tag based on category.
+ */
+function getCraftBadge(category) {
+  const cat = (category || '').toLowerCase()
+  if (cat.includes('pickle')) {
+    return 'Sun-cured'
+  }
+  if (cat.includes('thokku')) {
+    return 'Cold-pressed'
+  }
+  if (cat.includes('powder') || cat.includes('podi')) {
+    return 'Stone-ground'
+  }
+  return 'Small batch'
+}
+
 export default function ProductCard({ product }) {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
@@ -40,6 +65,9 @@ export default function ProductCard({ product }) {
   const quantityInCart = cartItem ? Number(cartItem.quantity) : 0
   const isSubscriptionOnly = Boolean(product.is_subscription_only || product.subscription_only)
   const isVeg = product.is_veg !== 0 && product.is_veg !== '0' && product.is_veg !== false
+
+  const cleanName = formatProductName(product.name)
+  const craftTag = getCraftBadge(product.category)
 
   const handleQuickAdd = async (e) => {
     e.preventDefault()
@@ -59,7 +87,7 @@ export default function ProductCard({ product }) {
     try {
       await addToCart({ productId: Number(product.id), quantity: 1 })
       setJustAdded(true)
-      showToast(`Added ${product.name} to cart`)
+      showToast(`Added ${cleanName} to cart`)
       setTimeout(() => setJustAdded(false), 1500)
     } catch (err) {
       console.error('Failed to add to cart:', err)
@@ -70,65 +98,85 @@ export default function ProductCard({ product }) {
   }
 
   const price = Number(product.selling_price || 0)
-  const unitText = product.quantity && product.unit ? `${product.quantity} ${product.unit}` : product.unit || ''
+  const unitText = product.quantity && product.unit ? `${product.quantity} ${product.unit}` : product.unit || '250 g'
 
   return (
     <Link
       to={`/product/${product.id}`}
-      className="card-hover-effect group flex flex-col overflow-hidden rounded-2xl border border-cream-300 bg-cream-50 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-chili-500"
+      className="card-hover-effect group flex flex-col justify-between overflow-hidden rounded-2xl border border-cream-300/80 bg-cream-50 shadow-xs hover:border-chili-400 hover:shadow-lg transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-chili-500 select-none"
     >
-      {/* Product Image Container */}
-      <div className="relative aspect-square w-full overflow-hidden bg-cream-200/40">
+      {/* 4:5 Photographic Canvas with Slow Hover Zoom */}
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-cream-200/50">
         <ProductImage
           src={product.image_url}
-          alt={product.name}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          alt={cleanName}
+          category={product.category}
+          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
         />
 
-        {/* Dietary veg mark & Unit Badge */}
-        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
-          <div className="rounded-md bg-cream-50/95 p-1 shadow-xs backdrop-blur-xs">
+        {/* Subtle warm overlay on hover */}
+        <div className="absolute inset-0 bg-amber-900/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+        {/* Top-Left: Dietary mark & Cream Weight Tag */}
+        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10">
+          <div className="rounded-md bg-cream-50/95 p-1 shadow-2xs backdrop-blur-xs">
             <DietaryBadge isVeg={isVeg} />
           </div>
           {unitText ? (
-            <span className="rounded-md bg-ink-900/80 px-2 py-0.5 text-[10px] font-semibold text-cream-100 backdrop-blur-xs">
+            <span className="rounded-md bg-cream-50/95 border border-cream-300/80 px-2 py-0.5 text-[10px] font-bold text-ink-800 shadow-2xs backdrop-blur-xs">
               {unitText}
             </span>
           ) : null}
         </div>
 
-        {/* Subscription only badge */}
+        {/* Bottom-Left: Authentic Craft Tag */}
+        <div className="absolute bottom-2.5 left-2.5 z-10">
+          <span className="rounded-md bg-ink-950/75 border border-cream-100/20 px-2 py-0.5 text-[10px] font-semibold text-cream-100 backdrop-blur-xs">
+            {craftTag}
+          </span>
+        </div>
+
+        {/* Subscription only indicator */}
         {isSubscriptionOnly ? (
-          <span className="absolute top-2.5 right-2.5 rounded-md bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-cream-50 shadow-xs">
+          <span className="absolute top-2.5 right-2.5 z-10 rounded-md bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-cream-50 shadow-xs">
             Subscription
           </span>
         ) : null}
 
         {quantityInCart > 0 ? (
-          <span className="absolute bottom-2.5 left-2.5 rounded-full bg-success-500 px-2 py-0.5 text-[10px] font-bold text-cream-50 shadow-xs">
+          <span className="absolute top-2.5 right-2.5 z-10 rounded-full bg-success-600 px-2.5 py-0.5 text-[10px] font-bold text-cream-50 shadow-xs">
             {quantityInCart} in cart
           </span>
         ) : null}
       </div>
 
-      {/* Product Details */}
+      {/* Product Information Area */}
       <div className="flex flex-1 flex-col justify-between p-3.5 sm:p-4">
         <div>
-          <h3 className="line-clamp-2 font-serif text-sm sm:text-base font-bold text-ink-900 group-hover:text-chili-600 transition-colors leading-snug">
-            {product.name}
+          {/* Category in small caps */}
+          <span className="text-[10px] uppercase font-bold tracking-widest text-ink-400 block mb-1">
+            {product.category || 'Traditional'}
+          </span>
+
+          {/* Product Name in Serif (stripped of [Test] / [Verify]) */}
+          <h3 className="line-clamp-2 font-serif text-base sm:text-lg font-bold text-ink-900 group-hover:text-chili-600 transition-colors leading-snug">
+            {cleanName}
           </h3>
-          {unitText ? (
-            <p className="mt-1 text-[11px] font-medium text-ink-500">
-              {unitText}
-            </p>
-          ) : null}
+
+          {/* One-line tasting note / ingredients */}
+          <p className="mt-1 text-xs text-ink-500 line-clamp-1 leading-relaxed">
+            {product.description || 'Artisanal small-batch preparation in pure cold-pressed oil.'}
+          </p>
         </div>
 
-        {/* Price & Add Action */}
-        <div className="mt-3 flex items-center justify-between gap-1.5 border-t border-cream-300/60 pt-2.5">
+        {/* Price & Refined Add Action */}
+        <div className="mt-3.5 pt-3 border-t border-cream-200/80 flex items-center justify-between gap-2">
           <div>
             <span className="font-serif text-base sm:text-lg font-bold text-chili-600 tabular-nums">
               {price > 0 ? `₹${price.toFixed(0)}` : 'In Plan'}
+            </span>
+            <span className="text-[10px] text-ink-500 font-medium ml-1">
+              / {unitText}
             </span>
           </div>
 
@@ -140,8 +188,8 @@ export default function ProductCard({ product }) {
                 e.stopPropagation()
                 navigate('/subscription')
               }}
-              aria-label={`View subscription plans for ${product.name}`}
-              className="inline-flex items-center gap-1 rounded-lg border border-chili-300 bg-chili-100/60 px-3 py-1.5 text-xs font-bold text-chili-600 transition-all duration-150 hover:bg-chili-600 hover:text-cream-50 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-chili-500"
+              aria-label={`View subscription plans for ${cleanName}`}
+              className="button-press inline-flex items-center gap-1 rounded-xl bg-amber-500 px-3.5 py-1.5 text-xs font-bold text-ink-950 transition-all hover:bg-amber-400 shadow-2xs"
             >
               <span>View Plans</span>
             </button>
@@ -150,11 +198,11 @@ export default function ProductCard({ product }) {
               type="button"
               onClick={handleQuickAdd}
               disabled={isAddingLocal}
-              aria-label={`Add ${product.name} to cart`}
+              aria-label={`Add ${cleanName} to cart`}
               className={`button-press spring-bounce inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-chili-500 cursor-pointer ${
                 justAdded
                   ? 'bg-success-600 text-cream-50 shadow-xs scale-105'
-                  : 'border border-chili-300 bg-chili-100/60 text-chili-600 hover:bg-chili-600 hover:text-cream-50 shadow-2xs'
+                  : 'bg-chili-600 text-cream-50 hover:bg-chili-500 shadow-xs'
               }`}
             >
               {justAdded ? (
