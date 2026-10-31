@@ -1,36 +1,45 @@
 import { api } from './client'
 
 /**
- * GET /list_all_products.php?cursor=&limit=
- * Public endpoint, but works fine for the admin product list too.
- * NOTE: there is no admin-specific "list all products including INACTIVE"
- * endpoint — this one filters to status = 'ACTIVE' only inside the PHP,
- * so inactive products won't show here either. Flag for backend: a real
- * admin product list should show every status.
+ * GET /list_all_products.php?cursor=&limit=&subscription_only=&for_sale_only=
+ * Public endpoint, but works for the admin product list.
  */
-export function listProducts({ cursor, limit = 20 } = {}) {
+export function listProducts({ cursor, limit = 20, subscriptionOnly, forSaleOnly } = {}) {
   return api
-    .get('/list_all_products.php', { params: { cursor, limit } })
+    .get('list_all_products.php', {
+      params: {
+        cursor,
+        limit,
+        subscription_only: subscriptionOnly ? 1 : undefined,
+        for_sale_only: forSaleOnly ? 1 : undefined,
+      },
+    })
     .then((res) => res.data)
 }
 
 /**
- * POST /create_product.php
- * Body: multipart/form-data — name, category, quantity, unit,
- * selling_price, description, status, and an optional `image` file.
- * Admin only.
- *
- * create_product.php reads everything from $_POST / $_FILES, so this must
- * go as multipart/form-data, not a JSON body — a JSON body leaves $_POST
- * empty server-side and every "required field" check fails. The backend
- * also only accepts an uploaded file for the image (it builds image_url
- * itself from $_FILES["image"]); there's no field for passing an
- * image_url string directly.
- *
- * @param {object} payload
- * @param {File} [payload.image] - optional image file to upload
+ * GET /admin_routes/list_subscription_products.php?subscription_only=&search=&category=
+ * Admin only. Returns all active products available for subscription plans.
  */
-export function createProduct({ image, ...fields }) {
+export function listSubscriptionProducts({ subscriptionOnly, search, category } = {}) {
+  return api
+    .get('admin_routes/list_subscription_products.php', {
+      params: {
+        subscription_only: subscriptionOnly !== undefined ? (subscriptionOnly ? 1 : 0) : undefined,
+        search: search || undefined,
+        category: category || undefined,
+      },
+    })
+    .then((res) => res.data)
+}
+
+/**
+ * POST /admin_routes/create_product.php
+ * Body: multipart/form-data or JSON. Supports name, category, quantity, unit,
+ * selling_price, description, status, is_subscription_only, and optional image file or image_url.
+ * Admin only.
+ */
+export function createProduct({ image, imageUrl, isSubscriptionOnly, ...fields }) {
   const formData = new FormData()
 
   Object.entries(fields).forEach(([key, value]) => {
@@ -39,13 +48,16 @@ export function createProduct({ image, ...fields }) {
     }
   })
 
-  if (image) {
-    formData.append('image', image)
+  if (isSubscriptionOnly !== undefined) {
+    formData.append('is_subscription_only', isSubscriptionOnly ? '1' : '0')
   }
 
-  // Don't set Content-Type manually — the browser needs to add the
-  // multipart boundary itself. Axios does this automatically when the
-  // body is a FormData instance.
+  if (image) {
+    formData.append('image', image)
+  } else if (imageUrl) {
+    formData.append('image_url', imageUrl)
+  }
+
   return api.post('admin_routes/create_product.php', formData).then((res) => res.data)
 }
 
@@ -68,9 +80,9 @@ export function getProductDetails(id) {
 /**
  * POST /admin_routes/update_product.php
  * Admin only. Accepts FormData (for image file) or JSON.
- * Fields: id, name, category, quantity, unit, selling_price, description, status, image
+ * Fields: id, name, category, quantity, unit, selling_price, description, status, image, is_subscription_only
  */
-export function updateProduct({ image, ...fields }) {
+export function updateProduct({ image, imageUrl, isSubscriptionOnly, ...fields }) {
   if (image) {
     const formData = new FormData()
     Object.entries(fields).forEach(([key, value]) => {
@@ -78,10 +90,20 @@ export function updateProduct({ image, ...fields }) {
         formData.append(key, value)
       }
     })
+    if (isSubscriptionOnly !== undefined) {
+      formData.append('is_subscription_only', isSubscriptionOnly ? '1' : '0')
+    }
     formData.append('image', image)
     return api.post('admin_routes/update_product.php', formData).then((res) => res.data)
   }
-  return api.post('admin_routes/update_product.php', fields).then((res) => res.data)
+
+  return api
+    .post('admin_routes/update_product.php', {
+      ...fields,
+      image_url: imageUrl,
+      is_subscription_only: isSubscriptionOnly !== undefined ? (isSubscriptionOnly ? 1 : 0) : undefined,
+    })
+    .then((res) => res.data)
 }
 
 /**

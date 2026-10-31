@@ -12,14 +12,21 @@ export function listCategories() {
  * GET /list_all_products.php?cursor=&limit=
  * Public, cursor-paginated, ACTIVE products only.
  */
-export function listProducts({ cursor, limit = 12 } = {}) {
+export function listProducts({ cursor, limit = 12, subscriptionOnly, forSaleOnly } = {}) {
   return api
-    .get('/list_all_products.php', { params: { cursor, limit } })
+    .get('/list_all_products.php', {
+      params: {
+        cursor,
+        limit,
+        subscription_only: subscriptionOnly ? 1 : undefined,
+        for_sale_only: forSaleOnly ? 1 : undefined,
+      },
+    })
     .then((res) => res.data)
 }
 
 /**
- * GET /search_products.php?search=&category=&status=&min_price=&max_price=&cursor=&limit=
+ * GET /search_products.php?search=&category=&status=&min_price=&max_price=&cursor=&limit=&subscription_only=&for_sale_only=
  * Public.
  */
 export function searchProducts({
@@ -30,6 +37,8 @@ export function searchProducts({
   maxPrice,
   cursor,
   limit = 12,
+  subscriptionOnly,
+  forSaleOnly,
 } = {}) {
   return api
     .get('/search_products.php', {
@@ -41,6 +50,8 @@ export function searchProducts({
         max_price: maxPrice,
         cursor,
         limit,
+        subscription_only: subscriptionOnly ? 1 : undefined,
+        for_sale_only: forSaleOnly ? 1 : undefined,
       },
     })
     .then((res) => res.data)

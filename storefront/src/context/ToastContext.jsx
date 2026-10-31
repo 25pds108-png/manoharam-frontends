@@ -57,20 +57,26 @@ function ToastItem({ toast, onDismiss }) {
 
   return (
     <div
-      className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-2xl border bg-white p-4 shadow-lg shadow-ink-900/10 transition-all duration-300 ease-out ${
+      role="status"
+      aria-live="polite"
+      className={`pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-2xl border p-4 shadow-lg shadow-ink-950/10 transition-all duration-300 ease-out ${
         visible ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
-      } ${isError ? 'border-chili-100' : 'border-success-100'}`}
+      } ${
+        isError
+          ? 'border-chili-200 bg-chili-50'
+          : 'border-cream-300 bg-cream-50'
+      }`}
     >
       {isError ? (
-        <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-chili-500" />
+        <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-chili-600" />
       ) : (
         <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success-500" />
       )}
       <p className="flex-1 text-sm font-medium leading-snug text-ink-900">{toast.message}</p>
       <button
         onClick={onDismiss}
-        className="mt-0.5 shrink-0 text-ink-300 transition-colors hover:text-ink-700"
-        aria-label="Dismiss"
+        className="mt-0.5 shrink-0 text-ink-400 transition-colors hover:text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-chili-500"
+        aria-label="Dismiss notification"
       >
         <X className="h-4 w-4" />
       </button>

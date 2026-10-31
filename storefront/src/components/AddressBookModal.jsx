@@ -116,12 +116,12 @@ export default function AddressBookModal({ isOpen, onClose, onSelectAddress }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/50 p-4">
-      <Card className="w-full max-w-lg p-5 shadow-2xl max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between border-b border-cream-200 pb-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/60 backdrop-blur-sm p-4">
+      <Card className="w-full max-w-lg p-5 shadow-2xl max-h-[90vh] flex flex-col bg-cream-50 border-cream-300">
+        <div className="flex items-center justify-between border-b border-cream-300 pb-3">
           <div className="flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-chili-500" />
-            <h3 className="font-display text-base font-semibold text-ink-900">
+            <MapPin className="h-5 w-5 text-chili-600" />
+            <h3 className="font-serif text-base font-bold text-ink-900">
               {isEditing
                 ? form.id
                   ? 'Edit Delivery Address'
@@ -131,19 +131,20 @@ export default function AddressBookModal({ isOpen, onClose, onSelectAddress }) {
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-1 text-ink-400 hover:bg-cream-100 transition-colors"
+            className="rounded-full p-1.5 text-ink-400 hover:bg-cream-200 transition-colors focus-visible:outline-none"
+            aria-label="Close address book modal"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {actionError ? (
-          <p className="mt-2 text-xs font-medium text-chili-600 bg-chili-50 p-2 rounded-lg">
+          <p className="mt-2 text-xs font-medium text-chili-600 bg-chili-50 border border-chili-200 p-2 rounded-lg">
             {actionError}
           </p>
         ) : null}
         {actionSuccess ? (
-          <p className="mt-2 text-xs font-medium text-success-700 bg-success-50 p-2 rounded-lg">
+          <p className="mt-2 text-xs font-medium text-success-500 bg-success-100 border border-success-500/30 p-2 rounded-lg">
             {actionSuccess}
           </p>
         ) : null}
@@ -323,15 +324,15 @@ export default function AddressBookModal({ isOpen, onClose, onSelectAddress }) {
                   return (
                     <div
                       key={addr.id}
-                      className={`p-3 rounded-xl border transition-colors ${
+                      className={`p-3.5 rounded-xl border transition-colors ${
                         isDef
-                          ? 'border-chili-300 bg-cream-50/40'
-                          : 'border-cream-200 bg-white hover:border-cream-300'
+                          ? 'border-chili-300 bg-chili-50/40'
+                          : 'border-cream-300 bg-cream-50 hover:border-cream-400'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-cream-100 text-ink-700 text-[10px]">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-cream-200 text-ink-700 text-[10px]">
                             {addr.address_type === 'WORK' ? (
                               <Briefcase className="h-3 w-3" />
                             ) : addr.address_type === 'OTHER' ? (
@@ -344,7 +345,7 @@ export default function AddressBookModal({ isOpen, onClose, onSelectAddress }) {
                             {addr.recipient_name || 'Delivery Address'}
                           </span>
                           {isDef ? (
-                            <span className="rounded-full bg-success-50 text-success-700 text-[9px] font-bold px-1.5 py-0.2">
+                            <span className="rounded-full bg-success-100 text-success-500 text-[9px] font-bold px-2 py-0.5">
                               DEFAULT
                             </span>
                           ) : null}
@@ -354,7 +355,7 @@ export default function AddressBookModal({ isOpen, onClose, onSelectAddress }) {
                           <button
                             type="button"
                             onClick={() => handleStartEdit(addr)}
-                            className="p-1 text-ink-400 hover:text-ink-800"
+                            className="p-1 text-ink-400 hover:text-ink-900"
                             title="Edit"
                           >
                             <Edit2 className="h-3.5 w-3.5" />
@@ -374,12 +375,12 @@ export default function AddressBookModal({ isOpen, onClose, onSelectAddress }) {
                         </div>
                       </div>
 
-                      <p className="mt-1 text-xs text-ink-600 leading-snug">{fullText}</p>
+                      <p className="mt-1 text-xs text-ink-700 leading-snug">{fullText}</p>
                       {addr.recipient_phone ? (
                         <p className="mt-0.5 text-[11px] text-ink-400">Phone: {addr.recipient_phone}</p>
                       ) : null}
 
-                      <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-cream-100">
+                      <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-cream-200">
                         {!isDef ? (
                           <button
                             type="button"
@@ -389,7 +390,7 @@ export default function AddressBookModal({ isOpen, onClose, onSelectAddress }) {
                             Set as default
                           </button>
                         ) : (
-                          <span className="text-[11px] text-success-700 font-medium flex items-center gap-1">
+                          <span className="text-[11px] text-success-500 font-medium flex items-center gap-1">
                             <Check className="h-3 w-3" /> Primary address
                           </span>
                         )}

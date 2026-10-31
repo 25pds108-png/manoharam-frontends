@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Sparkles, Layers } from 'lucide-react'
 import DashboardShell from '../components/layout/DashboardShell'
 import PageHeader from '../components/layout/PageHeader'
@@ -11,7 +11,7 @@ import Modal from '../components/ui/Modal'
 import Field from '../components/ui/Field'
 import ProductImage from '../components/ui/ProductImage'
 import { useCursorList } from '../hooks/useCursorList'
-import { listProducts, createProduct } from '../api/products'
+import { listProducts, createProduct, listSubscriptionProducts } from '../api/products'
 import { createSubscriptionPlan } from '../api/subscriptions'
 import { getApiErrorMessage } from '../api/client'
 
@@ -23,6 +23,7 @@ const emptyForm = {
   selling_price: '',
   description: '',
   status: 'ACTIVE',
+  is_subscription_only: false,
 }
 
 const emptySubForm = {
@@ -83,7 +84,8 @@ export default function Products() {
       const data = await createProduct({
         ...form,
         quantity: Number(form.quantity),
-        selling_price: Number(form.selling_price),
+        selling_price: form.is_subscription_only ? Number(form.selling_price || 0) : Number(form.selling_price),
+        isSubscriptionOnly: form.is_subscription_only,
         image: imageFile,
       })
 
@@ -164,14 +166,23 @@ export default function Products() {
                   <h3 className="font-display text-base font-semibold text-ink-900">
                     {product.name}
                   </h3>
-                  <Badge tone={toneForStatus(product.status)}>
-                    {formatStatusLabel(product.status)}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge tone={toneForStatus(product.status)}>
+                      {formatStatusLabel(product.status)}
+                    </Badge>
+                    {product.is_subscription_only ? (
+                      <span className="rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
+                        Subscription Only
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
                 <p className="mt-0.5 text-sm text-ink-500">{product.category || 'Uncategorised'}</p>
                 <div className="mt-3 flex items-center justify-between">
                   <p className="font-display text-lg font-semibold text-chili-500">
-                    ₹{Number(product.selling_price).toFixed(0)}
+                    {Number(product.selling_price) > 0
+                      ? `₹${Number(product.selling_price).toFixed(0)}`
+                      : 'Plan-only'}
                     <span className="ml-1 text-xs font-normal text-ink-300">/ {product.unit}</span>
                   </p>
                   <p className="text-xs text-ink-300">
@@ -227,13 +238,32 @@ export default function Products() {
             </Field>
           </div>
 
+          <div className="rounded-2xl border border-cream-300 bg-cream-50/70 p-3.5">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.is_subscription_only}
+                onChange={(e) => setForm((prev) => ({ ...prev, is_subscription_only: e.target.checked }))}
+                className="mt-0.5 h-4 w-4 rounded border-cream-300 text-chili-500 focus:ring-chili-400"
+              />
+              <div>
+                <span className="block text-sm font-semibold text-ink-900">
+                  Subscription-Only Product
+                </span>
+                <span className="block text-xs text-ink-500 mt-0.5">
+                  Prepares this product exclusively for subscription plans. Excluded from direct one-off customer cart orders. (Selling price is optional or can be ₹0).
+                </span>
+              </div>
+            </label>
+          </div>
+
           <Field
-            label="Selling price (₹)"
+            label={`Selling price (₹)${form.is_subscription_only ? ' (Optional for subscription-only)' : ''}`}
             type="number"
             step="0.01"
             value={form.selling_price}
             onChange={update('selling_price')}
-            required
+            required={!form.is_subscription_only}
           />
 
           <Field as="textarea" rows={3} label="Description" value={form.description} onChange={update('description')} />
@@ -251,6 +281,19 @@ export default function Products() {
               onChange={(e) => setImageFile(e.target.files?.[0] || null)}
               className="block w-full text-sm text-ink-700 file:mr-3 file:rounded-lg file:border-0 file:bg-chili-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-chili-600 hover:file:bg-chili-100"
             />
+            {imageFile ? (
+              <div className="mt-2.5 flex items-center gap-3 rounded-xl border border-cream-200 bg-cream-50 p-2">
+                <img
+                  src={URL.createObjectURL(imageFile)}
+                  alt="Selected preview"
+                  className="h-16 w-16 rounded-lg object-cover border border-cream-300"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-ink-900 truncate">{imageFile.name}</p>
+                  <p className="text-[11px] text-ink-500">{(imageFile.size / 1024).toFixed(1)} KB · Ready to upload</p>
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <Field as="select" label="Status" value={form.status} onChange={update('status')}>
@@ -336,9 +379,19 @@ function CreateSubscriptionModal({ open, onClose, onCreated, products }) {
   const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const subProductsQuery = useQuery({
+    queryKey: ['subscription-products-catalog'],
+    queryFn: () => listSubscriptionProducts(),
+    enabled: open,
+  })
+
+  const catalogProducts = subProductsQuery.data?.products?.length
+    ? subProductsQuery.data.products
+    : products
+
   const update = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }))
 
-  const productById = (id) => products.find((p) => String(p.id) === String(id))
+  const productById = (id) => catalogProducts.find((p) => String(p.id) === String(id))
 
   const addProduct = () => {
     if (!nextProductToAdd) return
@@ -415,7 +468,7 @@ function CreateSubscriptionModal({ open, onClose, onCreated, products }) {
     }
   }
 
-  const availableProducts = products.filter((p) => !selectedProductIds.includes(String(p.id)))
+  const availableProducts = catalogProducts.filter((p) => !selectedProductIds.includes(String(p.id)))
 
   return (
     <Modal open={open} onClose={resetAndClose} title="Create subscription plan" maxWidth="max-w-xl">
@@ -434,9 +487,16 @@ function CreateSubscriptionModal({ open, onClose, onCreated, products }) {
                     key={id}
                     className="flex items-center justify-between gap-2 rounded-xl border border-cream-200 bg-cream-50 px-3 py-2 text-sm"
                   >
-                    <span className="text-ink-900">
-                      {index + 1}. {product?.name || `Product #${id}`}
-                    </span>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <ProductImage
+                        src={product?.image_url}
+                        alt={product?.name}
+                        className="h-9 w-9 shrink-0 rounded-lg object-cover"
+                      />
+                      <span className="text-ink-900 font-medium truncate">
+                        {index + 1}. {product?.name || `Product #${id}`}
+                      </span>
+                    </div>
                     <span className="flex items-center gap-1">
                       <button
                         type="button"
@@ -534,6 +594,19 @@ function CreateSubscriptionModal({ open, onClose, onCreated, products }) {
             onChange={(e) => setImageFile(e.target.files?.[0] || null)}
             className="block w-full text-sm text-ink-700 file:mr-3 file:rounded-lg file:border-0 file:bg-chili-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-chili-600 hover:file:bg-chili-100"
           />
+          {imageFile ? (
+            <div className="mt-2.5 flex items-center gap-3 rounded-xl border border-cream-200 bg-cream-50 p-2">
+              <img
+                src={URL.createObjectURL(imageFile)}
+                alt="Selected plan preview"
+                className="h-16 w-16 rounded-lg object-cover border border-cream-300"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-ink-900 truncate">{imageFile.name}</p>
+                <p className="text-[11px] text-ink-500">{(imageFile.size / 1024).toFixed(1)} KB · Ready to upload</p>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <Field as="select" label="Status" value={form.status} onChange={update('status')}>

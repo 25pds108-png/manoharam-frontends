@@ -19,11 +19,11 @@ export default function PageHeader({ title, onBack, fallbackPath = '/', right = 
         type="button"
         onClick={handleBack}
         aria-label="Go back"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#E6D9C5] bg-[#FFFEFC] text-[#1C1917] shadow-xs hover:bg-[#FAF6EF] active:scale-95 transition-all md:hidden"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-cream-300 bg-cream-50 text-ink-900 shadow-xs hover:bg-cream-100 active:scale-95 transition-all md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-chili-500"
       >
-        <ChevronLeft className="h-4.5 w-4.5" />
+        <ChevronLeft className="h-5 w-5" />
       </button>
-      <h1 className="flex-1 font-serif text-xl font-bold text-[#1C1917] md:text-2xl text-left truncate">
+      <h1 className="flex-1 font-serif text-xl font-bold text-ink-900 md:text-3xl text-left truncate">
         {title}
       </h1>
       <div className="shrink-0">{right}</div>

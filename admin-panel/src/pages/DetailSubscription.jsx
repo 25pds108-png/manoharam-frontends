@@ -10,7 +10,7 @@ import Field from '../components/ui/Field'
 import ProductImage from '../components/ui/ProductImage'
 import Badge, { toneForStatus, formatStatusLabel } from '../components/ui/Badge'
 import { getSubscriptionPlanDetails, updateSubscriptionPlan } from '../api/subscriptions'
-import { listProducts } from '../api/products'
+import { listProducts, listSubscriptionProducts } from '../api/products'
 import { useCursorList } from '../hooks/useCursorList'
 import { getApiErrorMessage } from '../api/client'
 
@@ -72,6 +72,12 @@ export default function DetailSubscription() {
       <div className="grid grid-cols-3 gap-6">
         <div className="col-span-2 space-y-6">
           <Card className="p-5">
+            <ProductImage
+              src={plan.image_url}
+              alt={plan.name}
+              category={plan.category}
+              className="mb-4 h-56 w-full rounded-xl object-cover"
+            />
             <div className="flex items-center justify-between">
               <h1 className="font-display text-xl font-semibold text-ink-900">{plan.name}</h1>
               <Badge tone={toneForStatus(plan.status)}>{formatStatusLabel(plan.status)}</Badge>
@@ -188,11 +194,21 @@ function EditPlanModal({ open, onClose, plan, initialProducts, productsQuery, on
   const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const subProductsQuery = useQuery({
+    queryKey: ['subscription-products-catalog'],
+    queryFn: () => listSubscriptionProducts(),
+    enabled: open,
+  })
+
+  const catalogProducts = subProductsQuery.data?.products?.length
+    ? subProductsQuery.data.products
+    : productsQuery?.items ?? []
+
   const update = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }))
 
   const productById = (id) =>
     initialProducts.find((p) => String(p.id) === String(id)) ||
-    productsQuery.items.find((p) => String(p.id) === String(id))
+    catalogProducts.find((p) => String(p.id) === String(id))
 
   const addProduct = () => {
     if (!nextProductToAdd) return
@@ -256,7 +272,7 @@ function EditPlanModal({ open, onClose, plan, initialProducts, productsQuery, on
     }
   }
 
-  const availableProducts = productsQuery.items.filter(
+  const availableProducts = catalogProducts.filter(
     (p) => !selectedProductIds.includes(String(p.id))
   )
 
@@ -297,13 +313,36 @@ function EditPlanModal({ open, onClose, plan, initialProducts, productsQuery, on
         />
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-ink-700">Replace Image (optional)</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-            className="w-full text-sm text-ink-700 file:mr-4 file:rounded-xl file:border-0 file:bg-cream-100 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-ink-700 hover:file:bg-cream-200"
-          />
+          <label className="mb-1.5 block text-sm font-medium text-ink-700">Plan Image</label>
+          <div className="mb-2 flex items-center gap-3">
+            <div className="text-center">
+              <ProductImage
+                src={imageFile ? URL.createObjectURL(imageFile) : plan.image_url}
+                alt={plan.name}
+                className="h-14 w-14 rounded-xl border border-cream-200 object-cover"
+              />
+              <span className="text-[10px] text-ink-500 font-medium block mt-1">
+                {imageFile ? 'New Preview' : 'Current'}
+              </span>
+            </div>
+            <div className="flex-1">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                className="w-full text-xs text-ink-700 file:mr-3 file:rounded-xl file:border-0 file:bg-cream-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ink-700 hover:file:bg-cream-200"
+              />
+              {imageFile ? (
+                <p className="mt-1 text-xs text-forest-600 font-medium">
+                  ✓ Selected {imageFile.name} ({(imageFile.size / 1024).toFixed(1)} KB)
+                </p>
+              ) : (
+                <p className="mt-1 text-[11px] text-ink-400">
+                  Leave empty to retain current plan image.
+                </p>
+              )}
+            </div>
+          </div>
         </div>
 
         <div>
@@ -320,9 +359,16 @@ function EditPlanModal({ open, onClose, plan, initialProducts, productsQuery, on
                     key={id}
                     className="flex items-center justify-between rounded-xl border border-cream-200 bg-cream-50 px-3 py-2 text-sm"
                   >
-                    <span className="font-medium text-ink-900">
-                      #{index + 1} {product?.name || `Product #${id}`}
-                    </span>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <ProductImage
+                        src={product?.image_url}
+                        alt={product?.name}
+                        className="h-8 w-8 shrink-0 rounded-lg object-cover"
+                      />
+                      <span className="font-medium text-ink-900 truncate">
+                        #{index + 1} {product?.name || `Product #${id}`}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-1">
                       <button
                         type="button"

@@ -1,9 +1,12 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Search as SearchIcon, ChevronDown, ShoppingBag } from 'lucide-react'
+import { Search as SearchIcon, ChevronDown, SlidersHorizontal, X } from 'lucide-react'
 import AppShell from '../components/layout/AppShell'
 import PageHeader from '../components/layout/PageHeader'
 import ProductCard from '../components/ProductCard'
+import { ProductCardSkeleton } from '../components/ui/Skeleton'
+import EmptyState from '../components/ui/EmptyState'
+import Button from '../components/ui/Button'
 import { searchProducts, listCategories } from '../api/products'
 
 function useDebouncedValue(value, delayMs = 300) {
@@ -18,6 +21,7 @@ function useDebouncedValue(value, delayMs = 300) {
 export default function SearchPage() {
   const [term, setTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
+  const [filterType, setFilterType] = useState('ALL') // 'ALL' | 'DIRECT' | 'SUBSCRIPTION'
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
   const debouncedTerm = useDebouncedValue(term)
@@ -33,7 +37,7 @@ export default function SearchPage() {
   }, [categoriesQuery.data])
 
   const searchQuery = useInfiniteQuery({
-    queryKey: ['products', 'search', debouncedTerm, selectedCategory, minPrice, maxPrice],
+    queryKey: ['products', 'search', debouncedTerm, selectedCategory, minPrice, maxPrice, filterType],
     queryFn: ({ pageParam }) =>
       searchProducts({
         search: debouncedTerm || undefined,
@@ -42,6 +46,8 @@ export default function SearchPage() {
         maxPrice: maxPrice || undefined,
         cursor: pageParam,
         limit: 12,
+        subscriptionOnly: filterType === 'SUBSCRIPTION' ? true : undefined,
+        forSaleOnly: filterType === 'DIRECT' ? true : undefined,
       }),
     initialPageParam: undefined,
     getNextPageParam: (lastPage) =>
@@ -53,86 +59,147 @@ export default function SearchPage() {
     [searchQuery.data]
   )
 
+  const hasActiveFilters = Boolean(
+    term || selectedCategory !== 'All' || filterType !== 'ALL' || minPrice || maxPrice
+  )
+
+  const handleResetFilters = () => {
+    setTerm('')
+    setSelectedCategory('All')
+    setFilterType('ALL')
+    setMinPrice('')
+    setMaxPrice('')
+  }
+
   return (
     <AppShell maxWidth="max-w-7xl">
       <PageHeader title="Discover Our Delicacies" />
 
-      <div className="px-4 py-4 sm:px-6 lg:px-8">
-        {/* Search & Filter Inputs */}
+      <div className="animate-fade-in-up px-4 py-4 sm:px-6 lg:px-8 space-y-6">
+        {/* Search & Filter Bar */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          <div className="flex flex-1 items-center gap-2.5 rounded-lg border border-[#E6D9C5] bg-[#FFFEFC] px-3.5 py-2.5 shadow-xs focus-within:border-[#9B2C2C] focus-within:ring-1 focus-within:ring-[#9B2C2C]">
-            <SearchIcon className="h-4 w-4 text-[#78716C] shrink-0" />
+          <div className="flex flex-1 items-center gap-3 rounded-2xl border border-cream-300 bg-cream-50 px-4 py-3 shadow-xs focus-within:border-chili-500 focus-within:ring-2 focus-within:ring-chili-500/20 transition-all">
+            <SearchIcon className="h-5 w-5 text-ink-400 shrink-0" />
             <input
               autoFocus
               value={term}
               onChange={(e) => setTerm(e.target.value)}
-              placeholder="Search pickles, thokkus, powders, meals..."
-              className="flex-1 bg-transparent text-xs sm:text-sm text-[#1C1917] outline-none placeholder:text-[#A8A29E]"
+              placeholder="Search pickles, thokkus, podis, meal boxes..."
+              className="flex-1 bg-transparent text-sm text-ink-900 outline-none placeholder:text-ink-400"
             />
+            {term ? (
+              <button
+                type="button"
+                onClick={() => setTerm('')}
+                className="text-ink-400 hover:text-ink-700"
+                aria-label="Clear search input"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            ) : null}
           </div>
 
           <div className="flex items-center gap-2">
-            <input
-              type="number"
-              inputMode="numeric"
-              placeholder="Min ₹"
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
-              className="w-24 rounded-lg border border-[#E6D9C5] bg-[#FFFEFC] px-3 py-2 text-xs text-[#1C1917] outline-none placeholder:text-[#A8A29E] focus:border-[#9B2C2C]"
-            />
-            <span className="text-xs text-[#78716C]">—</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              placeholder="Max ₹"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-              className="w-24 rounded-lg border border-[#E6D9C5] bg-[#FFFEFC] px-3 py-2 text-xs text-[#1C1917] outline-none placeholder:text-[#A8A29E] focus:border-[#9B2C2C]"
-            />
+            <div className="flex items-center rounded-2xl border border-cream-300 bg-cream-50 px-3 py-2 shadow-xs focus-within:border-chili-500">
+              <span className="text-xs text-ink-400 mr-1.5 font-bold">₹</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                placeholder="Min"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+                className="w-16 bg-transparent text-xs text-ink-900 outline-none placeholder:text-ink-300"
+              />
+            </div>
+            <span className="text-xs text-ink-400">—</span>
+            <div className="flex items-center rounded-2xl border border-cream-300 bg-cream-50 px-3 py-2 shadow-xs focus-within:border-chili-500">
+              <span className="text-xs text-ink-400 mr-1.5 font-bold">₹</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                placeholder="Max"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                className="w-16 bg-transparent text-xs text-ink-900 outline-none placeholder:text-ink-300"
+              />
+            </div>
+
+            {hasActiveFilters ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleResetFilters}
+                className="text-ink-500 hover:text-chili-600 text-xs shrink-0"
+              >
+                Clear
+              </Button>
+            ) : null}
           </div>
         </div>
 
-        {/* Category filter tabs */}
-        {categories.length > 1 ? (
-          <div className="scrollbar-none mt-4 flex gap-1.5 overflow-x-auto pb-1">
-            {categories.map((cat) => (
+        {/* Filter Pills & Category Chips */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-cream-300 pb-4">
+          <div className="flex items-center gap-1.5 rounded-full border border-cream-300 bg-cream-50 p-1 shadow-xs">
+            {[
+              { id: 'ALL', label: 'All Items' },
+              { id: 'DIRECT', label: 'Direct Sale' },
+              { id: 'SUBSCRIPTION', label: 'Subscription Only' },
+            ].map((f) => (
               <button
-                key={cat}
+                key={f.id}
                 type="button"
-                onClick={() => setSelectedCategory(cat)}
-                className={`shrink-0 rounded-md px-3.5 py-1.5 text-xs font-bold transition-all ${
-                  selectedCategory === cat
-                    ? 'bg-[#9B2C2C] text-white shadow-xs'
-                    : 'border border-[#E6D9C5] bg-[#FFFEFC] text-[#44403C] hover:border-[#9B2C2C]/30 hover:bg-[#FAF6EF]'
+                onClick={() => setFilterType(f.id)}
+                className={`rounded-full px-3.5 py-1 text-xs font-bold transition-all ${
+                  filterType === f.id
+                    ? 'bg-chili-600 text-cream-50 shadow-xs'
+                    : 'text-ink-700 hover:bg-cream-100 hover:text-ink-900'
                 }`}
               >
-                {cat}
+                {f.label}
               </button>
             ))}
           </div>
-        ) : null}
+
+          {categories.length > 1 ? (
+            <div className="scrollbar-none flex gap-1.5 overflow-x-auto py-1">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`shrink-0 rounded-full px-3.5 py-1 text-xs font-bold transition-all ${
+                    selectedCategory === cat
+                      ? 'bg-ink-900 text-cream-50 shadow-xs'
+                      : 'border border-cream-300 bg-cream-50 text-ink-700 hover:bg-cream-100'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
 
         {/* Search Results */}
-        <div className="mt-6">
+        <div>
           {searchQuery.isLoading ? (
-            <div className="py-20 text-center">
-              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#9B2C2C] border-t-transparent" />
-              <p className="mt-3 text-xs font-semibold text-[#78716C]">Searching our kitchen…</p>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
             </div>
           ) : results.length === 0 ? (
-            <div className="rounded-2xl border border-[#E6D9C5] bg-[#FFFEFC] px-6 py-16 text-center max-w-md mx-auto">
-              <ShoppingBag className="mx-auto h-8 w-8 text-[#A8A29E]" />
-              <h2 className="mt-3 font-serif text-lg font-bold text-[#1C1917]">
-                No matching delicacies found
-              </h2>
-              <p className="mt-1 text-xs text-[#78716C]">
-                Try adjusting your search terms or clearing price filters.
-              </p>
-            </div>
+            <EmptyState
+              icon={SlidersHorizontal}
+              title="No matching delicacies found"
+              description="We could not find any products matching your current search terms or price filters. Try searching for pickles, podis, or adjusting your filters."
+              actionLabel="Clear All Filters"
+              onAction={handleResetFilters}
+            />
           ) : (
             <>
-              <p className="text-xs font-semibold text-[#78716C] mb-4">
-                Found {results.length} delicacy{results.length === 1 ? '' : 'ies'}
+              <p className="text-xs font-semibold text-ink-500 mb-4">
+                Found {results.length} delicacy{results.length === 1 ? '' : 'ies'} prepared with pure ingredients
               </p>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
                 {results.map((product) => (
@@ -142,20 +209,16 @@ export default function SearchPage() {
 
               {searchQuery.hasNextPage ? (
                 <div className="mt-8 flex justify-center pb-6">
-                  <button
+                  <Button
+                    variant="outline"
                     onClick={() => searchQuery.fetchNextPage()}
                     disabled={searchQuery.isFetchingNextPage}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-[#E6D9C5] bg-[#FFFEFC] px-6 py-2.5 text-xs font-bold text-[#1C1917] shadow-xs hover:border-[#9B2C2C]/30 hover:bg-[#FAF6EF] transition-all"
+                    loading={searchQuery.isFetchingNextPage}
+                    className="min-w-[200px]"
                   >
-                    {searchQuery.isFetchingNextPage ? (
-                      'Loading…'
-                    ) : (
-                      <>
-                        <span>Load more results</span>
-                        <ChevronDown className="h-3.5 w-3.5" />
-                      </>
-                    )}
-                  </button>
+                    <span>Load More Results</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
                 </div>
               ) : null}
             </>

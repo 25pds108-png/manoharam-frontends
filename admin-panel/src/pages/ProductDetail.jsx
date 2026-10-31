@@ -38,9 +38,10 @@ export default function ProductDetail() {
       category: product.category || '',
       quantity: product.quantity || '',
       unit: product.unit || 'g',
-      selling_price: product.selling_price || '',
+      selling_price: product.selling_price ?? '',
       description: product.description || '',
       status: product.status || 'ACTIVE',
+      is_subscription_only: Boolean(product.is_subscription_only || product.subscription_only),
     })
     setImageFile(null)
     setError(null)
@@ -59,7 +60,8 @@ export default function ProductDetail() {
         id: Number(id),
         ...form,
         quantity: Number(form.quantity),
-        selling_price: Number(form.selling_price),
+        selling_price: form.is_subscription_only ? Number(form.selling_price || 0) : Number(form.selling_price),
+        isSubscriptionOnly: form.is_subscription_only,
         image: imageFile,
       })
 
@@ -146,14 +148,21 @@ export default function ProductDetail() {
                 <h1 className="font-display text-xl font-semibold text-ink-900">
                   {product.name}
                 </h1>
-                <Badge tone={toneForStatus(product.status)}>
-                  {formatStatusLabel(product.status)}
-                </Badge>
+                <div className="flex items-center gap-1.5">
+                  {product.is_subscription_only ? (
+                    <span className="rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-800">
+                      Subscription Only
+                    </span>
+                  ) : null}
+                  <Badge tone={toneForStatus(product.status)}>
+                    {formatStatusLabel(product.status)}
+                  </Badge>
+                </div>
               </div>
               <p className="mt-1 text-sm text-ink-500">{product.category || 'Uncategorised'}</p>
               <div className="mt-3 flex items-center gap-4 text-sm text-ink-700">
                 <p className="font-display text-lg font-semibold text-chili-500">
-                  ₹{Number(product.selling_price).toFixed(0)}
+                  {Number(product.selling_price) > 0 ? `₹${Number(product.selling_price).toFixed(0)}` : 'Plan-only'}
                   <span className="ml-1 text-xs font-normal text-ink-300">/ {product.unit}</span>
                 </p>
                 <p className="text-ink-500">
@@ -271,11 +280,32 @@ export default function ProductDetail() {
             <Field
               type="number"
               step="any"
-              label="Price (₹)"
-              required
+              label={`Price (₹)${form.is_subscription_only ? ' (Optional for subscription-only)' : ''}`}
+              required={!form.is_subscription_only}
               value={form.selling_price || ''}
               onChange={updateField('selling_price')}
             />
+          </div>
+
+          <div className="rounded-2xl border border-cream-300 bg-cream-50/70 p-3.5">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.is_subscription_only || false}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, is_subscription_only: e.target.checked }))
+                }
+                className="mt-0.5 h-4 w-4 rounded border-cream-300 text-chili-500 focus:ring-chili-400"
+              />
+              <div>
+                <span className="block text-sm font-semibold text-ink-900">
+                  Subscription-Only Product
+                </span>
+                <span className="block text-xs text-ink-500 mt-0.5">
+                  When enabled, this delicacy is only available through scheduled subscription plans and cannot be purchased as a one-off item. (Price is optional/0.00).
+                </span>
+              </div>
+            </label>
           </div>
 
           <Field
@@ -287,13 +317,36 @@ export default function ProductDetail() {
           />
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-ink-700">Replace Image (optional)</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-              className="w-full text-xs text-ink-500 file:mr-3 file:rounded-pill file:border-0 file:bg-cream-200 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ink-700 hover:file:bg-cream-300"
-            />
+            <label className="mb-1.5 block text-sm font-medium text-ink-700">Product Image</label>
+            <div className="mb-2 flex items-center gap-3">
+              <div className="text-center">
+                <ProductImage
+                  src={imageFile ? URL.createObjectURL(imageFile) : product.image_url}
+                  alt={product.name}
+                  className="h-16 w-16 rounded-xl border border-cream-200 object-cover"
+                />
+                <span className="text-[10px] text-ink-500 font-medium block mt-1">
+                  {imageFile ? 'New Preview' : 'Current Image'}
+                </span>
+              </div>
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                  className="w-full text-xs text-ink-500 file:mr-3 file:rounded-pill file:border-0 file:bg-cream-200 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ink-700 hover:file:bg-cream-300"
+                />
+                {imageFile ? (
+                  <p className="mt-1 text-xs text-forest-600 font-medium">
+                    ✓ Selected {imageFile.name} ({(imageFile.size / 1024).toFixed(1)} KB)
+                  </p>
+                ) : (
+                  <p className="mt-1 text-[11px] text-ink-400">
+                    Leave empty to keep existing backend image.
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
 
           {error ? <p className="text-xs font-medium text-chili-500">{error}</p> : null}

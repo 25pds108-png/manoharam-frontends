@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   AlertCircle,
@@ -7,7 +7,6 @@ import {
   CalendarDays,
   Flame,
   IndianRupee,
-  PackageCheck,
   RefreshCw,
   PauseCircle,
   PlayCircle,
@@ -15,6 +14,8 @@ import {
   CalendarX,
   AlertTriangle,
   CreditCard,
+  ShieldCheck,
+  CheckCircle2,
 } from 'lucide-react'
 import AppShell from '../components/layout/AppShell'
 import PageHeader from '../components/layout/PageHeader'
@@ -32,13 +33,14 @@ import {
 } from '../api/subscriptions'
 import { createRazorpayOrder, verifyPayment } from '../api/cart'
 import { getApiErrorMessage } from '../api/client'
+import { useToast } from '../context/ToastContext'
 
 export default function SubscriptionDetails() {
   const { id } = useParams()
   const queryClient = useQueryClient()
+  const { showToast } = useToast()
 
   const [actionError, setActionError] = useState(null)
-  const [actionSuccess, setActionSuccess] = useState(null)
   const [isActing, setIsActing] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
@@ -60,7 +62,10 @@ export default function SubscriptionDetails() {
   const productsById = useMemo(() => {
     const map = new Map()
     products.forEach((p) => {
-      if (p && p.id) map.set(p.id, p)
+      if (p && p.id != null) {
+        map.set(Number(p.id), p)
+        map.set(String(p.id), p)
+      }
     })
     return map
   }, [products])
@@ -72,18 +77,20 @@ export default function SubscriptionDetails() {
 
   const handlePause = async () => {
     setActionError(null)
-    setActionSuccess(null)
     setIsActing(true)
     try {
       const res = await pauseSubscription({ subscriptionId: id })
       if (res.success) {
-        setActionSuccess('Subscription paused successfully.')
+        showToast('Subscription paused successfully.')
         refreshAll()
       } else {
         setActionError(res.message || 'Could not pause subscription')
+        showToast(res.message || 'Could not pause subscription', { type: 'error' })
       }
     } catch (err) {
-      setActionError(getApiErrorMessage(err, 'Could not pause subscription'))
+      const msg = getApiErrorMessage(err, 'Could not pause subscription')
+      setActionError(msg)
+      showToast(msg, { type: 'error' })
     } finally {
       setIsActing(false)
     }
@@ -91,18 +98,20 @@ export default function SubscriptionDetails() {
 
   const handleResume = async () => {
     setActionError(null)
-    setActionSuccess(null)
     setIsActing(true)
     try {
       const res = await resumeSubscription({ subscriptionId: id })
       if (res.success) {
-        setActionSuccess('Subscription resumed successfully.')
+        showToast('Subscription resumed successfully.')
         refreshAll()
       } else {
         setActionError(res.message || 'Could not resume subscription')
+        showToast(res.message || 'Could not resume subscription', { type: 'error' })
       }
     } catch (err) {
-      setActionError(getApiErrorMessage(err, 'Could not resume subscription'))
+      const msg = getApiErrorMessage(err, 'Could not resume subscription')
+      setActionError(msg)
+      showToast(msg, { type: 'error' })
     } finally {
       setIsActing(false)
     }
@@ -115,13 +124,16 @@ export default function SubscriptionDetails() {
       const res = await cancelSubscription({ subscriptionId: id, reason: cancelReason })
       if (res.success) {
         setShowCancelModal(false)
-        setActionSuccess('Subscription cancelled.')
+        showToast('Subscription cancelled.')
         refreshAll()
       } else {
         setActionError(res.message || 'Could not cancel subscription')
+        showToast(res.message || 'Could not cancel subscription', { type: 'error' })
       }
     } catch (err) {
-      setActionError(getApiErrorMessage(err, 'Could not cancel subscription'))
+      const msg = getApiErrorMessage(err, 'Could not cancel subscription')
+      setActionError(msg)
+      showToast(msg, { type: 'error' })
     } finally {
       setIsActing(false)
     }
@@ -134,7 +146,6 @@ export default function SubscriptionDetails() {
 
   const handleSkipDay = async (date, reason = '') => {
     setActionError(null)
-    setActionSuccess(null)
     setIsActing(true)
     try {
       const res = await skipSubscriptionDay({
@@ -143,16 +154,19 @@ export default function SubscriptionDetails() {
         reason: reason || undefined,
       })
       if (res.success) {
-        setActionSuccess(`Delivery on ${date} skipped.`)
+        showToast(`Delivery on ${date} skipped.`)
         setShowSkipModal(false)
         setModalDate('')
         setSkipReason('')
         refreshAll()
       } else {
         setActionError(res.message || 'Could not skip delivery date')
+        showToast(res.message || 'Could not skip delivery date', { type: 'error' })
       }
     } catch (err) {
-      setActionError(getApiErrorMessage(err, 'Could not skip delivery date'))
+      const msg = getApiErrorMessage(err, 'Could not skip delivery date')
+      setActionError(msg)
+      showToast(msg, { type: 'error' })
     } finally {
       setIsActing(false)
     }
@@ -160,20 +174,22 @@ export default function SubscriptionDetails() {
 
   const handleUnskipDay = async (date) => {
     setActionError(null)
-    setActionSuccess(null)
     setIsActing(true)
     try {
       const res = await unskipSubscriptionDay({ subscriptionId: id, skipDate: date })
       if (res.success) {
-        setActionSuccess(`Delivery on ${date} resumed.`)
+        showToast(`Delivery on ${date} resumed.`)
         setShowSkipModal(false)
         setModalDate('')
         refreshAll()
       } else {
         setActionError(res.message || 'Could not unskip delivery date')
+        showToast(res.message || 'Could not unskip delivery date', { type: 'error' })
       }
     } catch (err) {
-      setActionError(getApiErrorMessage(err, 'Could not unskip delivery date'))
+      const msg = getApiErrorMessage(err, 'Could not unskip delivery date')
+      setActionError(msg)
+      showToast(msg, { type: 'error' })
     } finally {
       setIsActing(false)
     }
@@ -181,18 +197,20 @@ export default function SubscriptionDetails() {
 
   const handlePaySubscription = async () => {
     setActionError(null)
-    setActionSuccess(null)
     setIsActing(true)
     try {
       if (!window.Razorpay) {
         setActionError('Razorpay SDK not loaded. Please refresh the page.')
+        showToast('Razorpay SDK not loaded', { type: 'error' })
         setIsActing(false)
         return
       }
 
       const res = await createRazorpayOrder({ subscriptionId: Number(id) })
       if (!res.success || !res.razorpay) {
-        setActionError(res.message || 'Could not initiate Razorpay payment for subscription')
+        const msg = res.message || 'Could not initiate Razorpay payment for subscription'
+        setActionError(msg)
+        showToast(msg, { type: 'error' })
         setIsActing(false)
         return
       }
@@ -204,6 +222,9 @@ export default function SubscriptionDetails() {
         name: 'Manoharam Real Foods',
         description: `Subscription #${id}`,
         order_id: res.razorpay.razorpay_order_id,
+        theme: {
+          color: '#9B2C2C', // chili-600
+        },
         handler: async function (response) {
           try {
             const verifyRes = await verifyPayment({
@@ -213,13 +234,16 @@ export default function SubscriptionDetails() {
               razorpay_signature: response.razorpay_signature,
             })
             if (verifyRes.success) {
-              setActionSuccess('Subscription payment confirmed!')
+              showToast('Subscription payment confirmed!')
               refreshAll()
             } else {
               setActionError(verifyRes.message || 'Payment verification failed.')
+              showToast(verifyRes.message || 'Payment verification failed.', { type: 'error' })
             }
           } catch (err) {
-            setActionError(getApiErrorMessage(err, 'Payment verification failed.'))
+            const msg = getApiErrorMessage(err, 'Payment verification failed.')
+            setActionError(msg)
+            showToast(msg, { type: 'error' })
           } finally {
             setIsActing(false)
           }
@@ -234,101 +258,104 @@ export default function SubscriptionDetails() {
       const rzp = new window.Razorpay(options)
       rzp.open()
     } catch (err) {
-      setActionError(getApiErrorMessage(err, 'Could not initiate payment'))
+      const msg = getApiErrorMessage(err, 'Could not initiate payment')
+      setActionError(msg)
+      showToast(msg, { type: 'error' })
       setIsActing(false)
     }
   }
 
   return (
-    <AppShell>
-      <PageHeader title="Subscription details" />
+    <AppShell maxWidth="max-w-4xl">
+      <PageHeader title="Subscription Details" fallbackPath="/subscription" />
 
-      <div className="px-4 pb-8 md:mx-auto md:max-w-xl">
+      <div className="px-4 pb-16 pt-4 sm:px-6 space-y-6 animate-fade-in">
         {detailQuery.isLoading ? (
           <DetailsSkeleton />
         ) : detailQuery.isError ? (
-          <div className="mt-4 flex flex-col items-center gap-3 rounded-card border border-dashed border-chili-200 bg-chili-50/40 p-6 text-center">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-chili-500 shadow-sm">
-              <AlertCircle className="h-4.5 w-4.5" />
+          <div className="mt-8 flex flex-col items-center gap-3 rounded-3xl border border-dashed border-chili-200 bg-chili-50 p-8 text-center max-w-md mx-auto">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cream-50 text-chili-600 shadow-xs">
+              <AlertCircle className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-ink-900">Couldn't load this subscription</p>
-              <p className="mt-0.5 text-sm text-ink-500">Check your connection and try again.</p>
+              <p className="font-serif text-lg font-bold text-ink-900">Couldn't load this subscription</p>
+              <p className="mt-1 text-xs text-ink-500">Check your connection and try again.</p>
             </div>
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => detailQuery.refetch()}
-              className="flex items-center gap-1.5 rounded-pill bg-white px-4 py-2 text-sm font-semibold text-chili-500 shadow-sm ring-1 ring-chili-200 transition-colors duration-200 hover:bg-chili-500 hover:text-cream-50"
+              className="mt-2"
             >
               <RefreshCw className="h-3.5 w-3.5" />
-              Retry
-            </button>
+              <span>Retry</span>
+            </Button>
           </div>
         ) : (
           <>
             <HeroCard subscription={subscription} />
 
-            {/* Notification messages */}
+            {/* Error banner */}
             {actionError ? (
-              <p className="mt-3 rounded-xl bg-chili-50 p-2.5 text-xs font-medium text-chili-600">
+              <p className="rounded-2xl border border-chili-200 bg-chili-50 p-3.5 text-xs font-semibold text-chili-600">
                 {actionError}
               </p>
             ) : null}
-            {actionSuccess ? (
-              <p className="mt-3 rounded-xl bg-success-50 p-2.5 text-xs font-medium text-success-700">
-                {actionSuccess}
-              </p>
-            ) : null}
 
-            {/* Quick Actions */}
-            <div className="mt-4 flex flex-wrap gap-2">
+            {/* Quick Actions Strip */}
+            <div className="flex flex-wrap items-center gap-3 pt-1">
               {subscription.payment_status !== 'PAID' && subscription.status !== 'CANCELLED' ? (
                 <Button
                   variant="primary"
+                  size="sm"
                   onClick={handlePaySubscription}
                   disabled={isActing}
-                  className="flex items-center gap-1.5 text-xs py-2 shadow-sm"
+                  className="shadow-sm"
                 >
                   <CreditCard className="h-4 w-4" />
-                  Pay ₹{subscription.total_amount} Now
+                  <span>Pay ₹{subscription.total_amount} Now</span>
                 </Button>
               ) : null}
+
               {subscription.status === 'ACTIVE' || subscription.status === 'APPROVED' ? (
                 <Button
-                  variant="ghost"
+                  variant="outline"
+                  size="sm"
                   onClick={handlePause}
                   disabled={isActing}
-                  className="flex items-center gap-1.5 text-xs py-2 bg-white shadow-sm ring-1 ring-cream-300"
+                  className="bg-cream-50 shadow-2xs"
                 >
-                  <PauseCircle className="h-4 w-4 text-warning-600" />
-                  Pause subscription
+                  <PauseCircle className="h-4 w-4 text-amber-600" />
+                  <span>Pause Subscription</span>
                 </Button>
               ) : null}
 
               {subscription.status === 'PAUSED' ? (
                 <Button
-                  variant="ghost"
+                  variant="outline"
+                  size="sm"
                   onClick={handleResume}
                   disabled={isActing}
-                  className="flex items-center gap-1.5 text-xs py-2 bg-white shadow-sm ring-1 ring-cream-300"
+                  className="bg-cream-50 shadow-2xs"
                 >
-                  <PlayCircle className="h-4 w-4 text-success-600" />
-                  Resume subscription
+                  <PlayCircle className="h-4 w-4 text-success-500" />
+                  <span>Resume Subscription</span>
                 </Button>
               ) : null}
 
               {subscription.status === 'ACTIVE' || subscription.status === 'APPROVED' ? (
                 <Button
-                  variant="ghost"
+                  variant="outline"
+                  size="sm"
                   onClick={() => {
                     setSkipModalMode('skip')
                     setShowSkipModal(true)
                   }}
                   disabled={isActing}
-                  className="flex items-center gap-1.5 text-xs py-2 bg-white shadow-sm ring-1 ring-cream-300"
+                  className="bg-cream-50 shadow-2xs"
                 >
-                  <CalendarX className="h-4 w-4 text-ink-600" />
-                  Skip / Unskip date
+                  <CalendarX className="h-4 w-4 text-chili-600" />
+                  <span>Skip / Resume Date</span>
                 </Button>
               ) : null}
 
@@ -337,10 +364,10 @@ export default function SubscriptionDetails() {
                   type="button"
                   onClick={() => setShowCancelModal(true)}
                   disabled={isActing}
-                  className="inline-flex items-center gap-1.5 rounded-pill bg-white px-3.5 py-2 text-xs font-semibold text-chili-500 shadow-sm ring-1 ring-cream-300 hover:bg-chili-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-cream-300 bg-cream-50 px-4 py-2 text-xs font-semibold text-chili-600 shadow-xs hover:bg-chili-50 transition-colors ml-auto"
                 >
                   <XCircle className="h-4 w-4" />
-                  Cancel plan
+                  <span>Cancel Plan</span>
                 </button>
               ) : null}
             </div>
@@ -355,21 +382,21 @@ export default function SubscriptionDetails() {
 
             {/* Skip / Unskip Date Modal */}
             {showSkipModal ? (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/50 p-4">
-                <Card className="w-full max-w-sm p-5 shadow-2xl">
-                  <div className="flex items-center gap-2 text-ink-900">
-                    <CalendarX className="h-5 w-5 text-chili-500 shrink-0" />
-                    <h3 className="font-display text-base font-semibold">
-                      {skipModalMode === 'skip' ? 'Skip Delivery Date' : 'Unskip (Resume) Delivery Date'}
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/60 backdrop-blur-sm p-4 animate-fade-in">
+                <Card className="w-full max-w-sm p-6 shadow-2xl space-y-4 rounded-3xl border-cream-300">
+                  <div className="flex items-center gap-2.5 text-ink-900">
+                    <CalendarX className="h-5 w-5 text-chili-600 shrink-0" />
+                    <h3 className="font-serif text-lg font-bold">
+                      {skipModalMode === 'skip' ? 'Skip Delivery Date' : 'Resume Delivery Date'}
                     </h3>
                   </div>
 
-                  <div className="mt-3 flex rounded-lg bg-cream-100 p-1 text-xs">
+                  <div className="flex rounded-xl bg-cream-100 p-1 text-xs">
                     <button
                       type="button"
                       onClick={() => setSkipModalMode('skip')}
-                      className={`flex-1 py-1 rounded-md font-semibold transition-colors ${
-                        skipModalMode === 'skip' ? 'bg-white text-chili-600 shadow-xs' : 'text-ink-600'
+                      className={`flex-1 py-1.5 rounded-lg font-bold transition-colors ${
+                        skipModalMode === 'skip' ? 'bg-cream-50 text-chili-600 shadow-xs' : 'text-ink-600'
                       }`}
                     >
                       Skip Delivery
@@ -377,50 +404,51 @@ export default function SubscriptionDetails() {
                     <button
                       type="button"
                       onClick={() => setSkipModalMode('unskip')}
-                      className={`flex-1 py-1 rounded-md font-semibold transition-colors ${
-                        skipModalMode === 'unskip' ? 'bg-white text-success-700 shadow-xs' : 'text-ink-600'
+                      className={`flex-1 py-1.5 rounded-lg font-bold transition-colors ${
+                        skipModalMode === 'unskip' ? 'bg-cream-50 text-success-500 shadow-xs' : 'text-ink-600'
                       }`}
                     >
                       Resume / Unskip
                     </button>
                   </div>
 
-                  <div className="mt-3 space-y-2">
+                  <div className="space-y-3">
                     <div>
-                      <label className="text-xs font-medium text-ink-700">Delivery Date</label>
+                      <label className="text-xs font-semibold text-ink-700">Delivery Date</label>
                       <input
                         type="date"
                         value={modalDate}
                         onChange={(e) => setModalDate(e.target.value)}
-                        className="mt-1 w-full rounded-xl border border-cream-300 p-2 text-xs text-ink-900 focus:border-chili-500 focus:outline-none"
+                        className="mt-1 w-full rounded-xl border border-cream-300 bg-cream-100 p-2.5 text-xs text-ink-900 focus:border-chili-500 outline-none"
                       />
                     </div>
 
                     {skipModalMode === 'skip' ? (
                       <div>
-                        <label className="text-xs font-medium text-ink-700">Reason (optional)</label>
+                        <label className="text-xs font-semibold text-ink-700">Reason (optional)</label>
                         <input
                           type="text"
                           value={skipReason}
                           onChange={(e) => setSkipReason(e.target.value)}
-                          placeholder="e.g. Out of town, traveling"
-                          className="mt-1 w-full rounded-xl border border-cream-300 p-2 text-xs text-ink-900 focus:border-chili-500 focus:outline-none"
+                          placeholder="e.g. Traveling, out of station"
+                          className="mt-1 w-full rounded-xl border border-cream-300 bg-cream-100 p-2.5 text-xs text-ink-900 focus:border-chili-500 outline-none"
                         />
                       </div>
                     ) : null}
                   </div>
 
-                  <div className="mt-4 flex gap-2 justify-end">
+                  <div className="flex gap-2 justify-end pt-2">
                     <Button
                       variant="ghost"
+                      size="sm"
                       onClick={() => setShowSkipModal(false)}
                       disabled={isActing}
-                      className="text-xs py-2"
                     >
                       Cancel
                     </Button>
                     <Button
                       variant="primary"
+                      size="sm"
                       onClick={() => {
                         if (!modalDate) return
                         if (skipModalMode === 'skip') {
@@ -430,7 +458,6 @@ export default function SubscriptionDetails() {
                         }
                       }}
                       disabled={isActing || !modalDate}
-                      className="text-xs py-2"
                     >
                       {isActing ? 'Processing...' : skipModalMode === 'skip' ? 'Skip Date' : 'Resume Date'}
                     </Button>
@@ -441,30 +468,31 @@ export default function SubscriptionDetails() {
 
             {/* Cancel Modal */}
             {showCancelModal ? (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/50 p-4">
-                <Card className="w-full max-w-sm p-5 shadow-2xl">
-                  <div className="flex items-center gap-2 text-chili-500">
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/60 backdrop-blur-sm p-4 animate-fade-in">
+                <Card className="w-full max-w-sm p-6 shadow-2xl space-y-4 rounded-3xl border-cream-300">
+                  <div className="flex items-center gap-2.5 text-chili-600">
                     <AlertTriangle className="h-5 w-5 shrink-0" />
-                    <h3 className="font-display text-base font-semibold text-ink-900">Cancel Subscription</h3>
+                    <h3 className="font-serif text-lg font-bold text-ink-900">Cancel Subscription</h3>
                   </div>
-                  <p className="mt-2 text-xs text-ink-500">
-                    Are you sure you want to cancel your "{subscription.name}" subscription? Future deliveries will be stopped.
+                  <p className="text-xs text-ink-500 leading-relaxed">
+                    Are you sure you want to cancel your "{subscription.name}" subscription? Future scheduled kitchen deliveries will be halted.
                   </p>
                   <textarea
                     rows={2}
                     value={cancelReason}
                     onChange={(e) => setCancelReason(e.target.value)}
                     placeholder="Reason for cancellation (optional)..."
-                    className="mt-3 w-full rounded-xl border border-cream-300 p-2.5 text-xs text-ink-900 focus:border-chili-500 focus:outline-none"
+                    className="w-full rounded-xl border border-cream-300 bg-cream-100 p-3 text-xs text-ink-900 focus:border-chili-500 outline-none"
                   />
-                  <div className="mt-4 flex gap-2 justify-end">
-                    <Button variant="ghost" onClick={() => setShowCancelModal(false)} disabled={isActing}>
+                  <div className="flex gap-2 justify-end pt-2">
+                    <Button variant="ghost" size="sm" onClick={() => setShowCancelModal(false)} disabled={isActing}>
                       Keep subscription
                     </Button>
                     <Button
+                      variant="primary"
+                      size="sm"
                       onClick={handleCancel}
                       loading={isActing}
-                      className="bg-chili-500 text-cream-50 hover:bg-chili-600"
                     >
                       Yes, cancel
                     </Button>
@@ -481,31 +509,39 @@ export default function SubscriptionDetails() {
 
 function HeroCard({ subscription }) {
   return (
-    <Card className="mt-4 overflow-hidden bg-gradient-to-br from-chili-500 to-chili-600 p-5 text-cream-50 shadow-lg shadow-chili-900/15">
-      <Badge tone="inverse">{formatStatusLabel(subscription.status)}</Badge>
-      <h1 className="mt-3 font-display text-2xl font-semibold">{subscription.name}</h1>
-      {subscription.description ? (
-        <p className="mt-1 text-sm leading-relaxed opacity-85">{subscription.description}</p>
-      ) : null}
+    <Card className="overflow-hidden bg-gradient-to-br from-chili-700 via-chili-800 to-chili-900 p-6 sm:p-8 text-cream-50 shadow-xl space-y-5 rounded-3xl border-none">
+      <div className="flex items-center justify-between">
+        <Badge tone="inverse" className="shadow-xs font-bold">{formatStatusLabel(subscription.status)}</Badge>
+        <span className="text-xs font-bold text-amber-300 bg-ink-950/40 px-3 py-1 rounded-full border border-amber-300/20">
+          Subscription #{subscription.id}
+        </span>
+      </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 border-t border-cream-50/20 pt-4 sm:grid-cols-4">
-        <Stat icon={IndianRupee} label="Per week" value={`₹${subscription.price_per_week}`} />
-        <Stat icon={IndianRupee} label="Total" value={`₹${subscription.total_amount}`} />
-        <Stat icon={CalendarDays} label="Weeks" value={subscription.weeks} />
+      <div>
+        <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-cream-50">{subscription.name}</h1>
+        {subscription.description ? (
+          <p className="mt-1 text-xs sm:text-sm text-cream-100/90 leading-relaxed font-sans">{subscription.description}</p>
+        ) : null}
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 border-t border-cream-50/20 pt-5 sm:grid-cols-4">
+        <Stat icon={IndianRupee} label="Per week" value={`₹${Number(subscription.price_per_week || 0).toFixed(0)}`} />
+        <Stat icon={IndianRupee} label="Total Paid" value={`₹${Number(subscription.total_amount || 0).toFixed(0)}`} />
+        <Stat icon={CalendarDays} label="Duration" value={`${subscription.weeks} Weeks`} />
         <Stat
           icon={CalendarClock}
-          label="Duration"
+          label="Cycle Window"
           value={`${subscription.start_date} – ${subscription.end_date}`}
           wide
         />
       </div>
 
       {subscription.exclude_saturday || subscription.exclude_sunday ? (
-        <p className="mt-3 text-xs opacity-80">
-          No deliveries on{' '}
+        <p className="text-xs text-amber-200/90 pt-1 font-medium">
+          Weekend deliveries excluded on{' '}
           {[subscription.exclude_saturday && 'Saturdays', subscription.exclude_sunday && 'Sundays']
             .filter(Boolean)
-            .join(' or ')}
+            .join(' and ')}
           .
         </p>
       ) : null}
@@ -516,11 +552,11 @@ function HeroCard({ subscription }) {
 function Stat({ icon: Icon, label, value, wide }) {
   return (
     <div className={wide ? 'col-span-2 sm:col-span-4' : ''}>
-      <div className="flex items-center gap-1 text-[11px] uppercase tracking-wide opacity-75">
-        <Icon className="h-3 w-3" />
+      <div className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-widest text-amber-300">
+        <Icon className="h-3.5 w-3.5" />
         {label}
       </div>
-      <p className="mt-0.5 text-sm font-semibold leading-snug">{value}</p>
+      <p className="mt-1 font-serif text-base sm:text-lg font-bold leading-snug tabular-nums text-cream-50">{value}</p>
     </div>
   )
 }
@@ -529,42 +565,56 @@ function ProductsSection({ products = [] }) {
   if (!Array.isArray(products) || products.length === 0) return null
 
   return (
-    <div className="mt-6">
-      <h2 className="font-display text-lg font-semibold text-ink-900">What's included</h2>
-      <p className="mt-0.5 text-sm text-ink-500">
-        {products.length} {products.length === 1 ? 'item' : 'items'} on rotation for this plan
-      </p>
+    <div className="space-y-4">
+      <div>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-chili-600 block">
+          Kitchen Rotation
+        </span>
+        <h2 className="font-serif text-lg sm:text-xl font-bold text-ink-900">Delicacies in Rotation</h2>
+      </div>
 
-      <div className="mt-3 space-y-3">
+      <div className="space-y-3">
         {products.map((product) => (
-          <Card key={product.id} className="flex gap-3 p-3">
+          <Card key={product.id} className="flex gap-4 p-4 items-center rounded-2xl border-cream-300 shadow-2xs">
             <ProductImage
               src={product.image_url}
               alt={product.name}
-              className="h-16 w-16 shrink-0 rounded-xl"
+              className="h-16 w-16 shrink-0 rounded-xl object-cover border border-cream-300/80"
             />
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
-                <h3 className="line-clamp-1 font-display text-sm font-semibold text-ink-900">
+                <h3 className="line-clamp-1 font-serif text-sm sm:text-base font-bold text-ink-900">
                   {product.name}
                 </h3>
                 {Number(product.nutrition?.calories) > 0 ? (
-                  <span className="flex shrink-0 items-center gap-1 rounded-pill bg-ink-900/[0.05] px-2 py-0.5 text-[11px] font-medium text-ink-700">
-                    <Flame className="h-3 w-3 text-chili-500" />
-                    {Math.round(product.nutrition.calories)} kcal
+                  <span className="flex shrink-0 items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[11px] font-bold text-amber-700">
+                    <Flame className="h-3 w-3 text-amber-500" />
+                    {Math.round(product.nutrition.calories)} cal
                   </span>
                 ) : null}
               </div>
-              <p className="mt-0.5 text-xs text-ink-300">
+              <p className="mt-0.5 text-xs text-ink-500">
                 {product.quantity} {product.unit}
               </p>
 
               {Number(product.nutrition?.calories) > 0 ? (
-                <div className="mt-2 grid grid-cols-4 gap-1 border-t border-ink-900/[0.06] pt-2">
-                  <NutrientStat label="Pro" value={product.nutrition.protein} unit="g" />
-                  <NutrientStat label="Carb" value={product.nutrition.carbs} unit="g" />
-                  <NutrientStat label="Fat" value={product.nutrition.fat} unit="g" />
-                  <NutrientStat label="Fib" value={product.nutrition.fiber} unit="g" />
+                <div className="mt-2.5 grid grid-cols-4 gap-2 border-t border-cream-300/60 pt-2 text-center text-xs">
+                  <div>
+                    <span className="font-bold text-ink-900">{product.nutrition.protein}g</span>
+                    <span className="block text-[9px] uppercase text-ink-400">Pro</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-ink-900">{product.nutrition.carbs}g</span>
+                    <span className="block text-[9px] uppercase text-ink-400">Carb</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-ink-900">{product.nutrition.fat}g</span>
+                    <span className="block text-[9px] uppercase text-ink-400">Fat</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-ink-900">{product.nutrition.fiber}g</span>
+                    <span className="block text-[9px] uppercase text-ink-400">Fib</span>
+                  </div>
                 </div>
               ) : null}
             </div>
@@ -575,46 +625,37 @@ function ProductsSection({ products = [] }) {
   )
 }
 
-function NutrientStat({ label, value, unit = '' }) {
-  return (
-    <div className="flex min-w-0 flex-col items-center text-center">
-      <span className="truncate text-xs font-semibold text-ink-900">
-        {value}
-        {unit}
-      </span>
-      <span className="text-[9px] font-medium uppercase tracking-wide text-ink-300">{label}</span>
-    </div>
-  )
-}
-
 function ScheduleSection({ deliverySchedule = [], productsById = new Map(), onSkipDay, isActing }) {
   if (!Array.isArray(deliverySchedule) || deliverySchedule.length === 0) return null
 
   const todayStr = new Date().toISOString().slice(0, 10)
 
   return (
-    <div className="mt-6">
-      <h2 className="font-display text-lg font-semibold text-ink-900">Delivery schedule</h2>
-      <p className="mt-0.5 text-sm text-ink-500">
-        {deliverySchedule.length} {deliverySchedule.length === 1 ? 'delivery' : 'deliveries'} across
-        this plan
-      </p>
+    <div className="space-y-4">
+      <div>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-chili-600 block">
+          Day-by-Day Calendar
+        </span>
+        <h2 className="font-serif text-lg sm:text-xl font-bold text-ink-900">Full Delivery Schedule ({deliverySchedule.length})</h2>
+      </div>
 
-      <Card className="mt-3 divide-y divide-ink-900/[0.06] p-0">
+      <Card className="divide-y divide-cream-300 p-0 overflow-hidden shadow-xs rounded-3xl border-cream-300">
         {deliverySchedule.map((entry) => {
-          const product = productsById.get(entry.product_id)
+          const product = productsById.get(Number(entry.product_id)) || productsById.get(String(entry.product_id))
           const isUpcoming = entry.delivery_date >= todayStr
 
           return (
-            <div key={`${entry.delivery_date}-${entry.sequence}`} className="flex items-center gap-3 p-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-chili-50 text-chili-500">
-                <PackageCheck className="h-4 w-4" />
-              </div>
+            <div key={`${entry.delivery_date}-${entry.sequence}`} className="flex items-center gap-3.5 p-4 hover:bg-cream-100/40 transition-colors">
+              <ProductImage
+                src={product?.image_url}
+                alt={product?.name || 'Scheduled Delicacy'}
+                className="h-13 w-13 shrink-0 rounded-xl object-cover border border-cream-300/80"
+              />
               <div className="min-w-0 flex-1">
-                <p className="line-clamp-1 text-sm font-medium text-ink-900">
-                  {product?.name ?? 'Product'}
+                <p className="line-clamp-1 font-serif text-sm font-bold text-ink-900">
+                  {product?.name ?? 'Scheduled Delicacy'}
                 </p>
-                <p className="text-xs text-ink-300">{formatDeliveryDate(entry.delivery_date)}</p>
+                <p className="text-xs text-ink-500 mt-0.5">{formatDeliveryDate(entry.delivery_date)}</p>
               </div>
 
               {isUpcoming && onSkipDay ? (
@@ -622,13 +663,15 @@ function ScheduleSection({ deliverySchedule = [], productsById = new Map(), onSk
                   type="button"
                   onClick={() => onSkipDay(entry.delivery_date)}
                   disabled={isActing}
-                  className="rounded-pill bg-cream-100 px-2.5 py-1 text-[11px] font-semibold text-ink-600 hover:bg-cream-200 hover:text-chili-500 transition-colors disabled:opacity-50 shrink-0"
+                  className="rounded-full bg-cream-100 border border-cream-300 px-3.5 py-1 text-xs font-bold text-ink-700 hover:border-chili-300 hover:text-chili-600 transition-colors disabled:opacity-50 shrink-0"
                 >
                   Skip
                 </button>
               ) : null}
 
-              <span className="shrink-0 text-xs font-medium text-ink-300">#{entry.sequence}</span>
+              <span className="shrink-0 text-xs font-bold text-ink-400 bg-cream-100 px-2.5 py-1 rounded-md border border-cream-300/60">
+                #{entry.sequence}
+              </span>
             </div>
           )
         })}
@@ -645,12 +688,12 @@ function formatDeliveryDate(isoDate) {
 
 function DetailsSkeleton() {
   return (
-    <div className="mt-4 animate-pulse space-y-4">
-      <div className="h-40 rounded-card bg-ink-900/5" />
+    <div className="mt-4 animate-pulse space-y-6">
+      <div className="h-52 rounded-3xl bg-cream-200" />
       <div className="space-y-3">
-        <div className="h-16 rounded-card bg-ink-900/5" />
-        <div className="h-16 rounded-card bg-ink-900/5" />
-        <div className="h-16 rounded-card bg-ink-900/5" />
+        <div className="h-20 rounded-2xl bg-cream-200" />
+        <div className="h-20 rounded-2xl bg-cream-200" />
+        <div className="h-20 rounded-2xl bg-cream-200" />
       </div>
     </div>
   )

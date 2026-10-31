@@ -16,6 +16,7 @@ import DashboardShell from '../components/layout/DashboardShell'
 import PageHeader from '../components/layout/PageHeader'
 import Card from '../components/ui/Card'
 import Badge, { toneForStatus, formatStatusLabel } from '../components/ui/Badge'
+import ProductImage from '../components/ui/ProductImage'
 import { getDailyDispatch } from '../api/subscriptions'
 import { getDashboardStats, getSalesReport } from '../api/dashboard'
 
@@ -330,9 +331,21 @@ export default function Dashboard() {
                             </td>
                             <td className="py-2.5 pr-3 text-ink-700">{del.customer_phone || '—'}</td>
                             <td className="py-2.5 pr-3 text-ink-900 font-medium">
-                              {del.scheduled_product
-                                ? `${del.scheduled_product.name} (${del.scheduled_product.quantity} ${del.scheduled_product.unit})`
-                                : del.plan_name}
+                              <div className="flex items-center gap-2">
+                                {del.scheduled_product && (
+                                  <ProductImage
+                                    src={del.scheduled_product.image_url}
+                                    alt={del.scheduled_product.name}
+                                    category="Salads"
+                                    className="h-8 w-8 shrink-0 rounded-lg"
+                                  />
+                                )}
+                                <span className="line-clamp-1">
+                                  {del.scheduled_product
+                                    ? `${del.scheduled_product.name} (${del.scheduled_product.quantity} ${del.scheduled_product.unit})`
+                                    : del.plan_name}
+                                </span>
+                              </div>
                             </td>
                             <td className="py-2.5 pr-3 text-ink-500 max-w-xs truncate">
                               {del.delivery_address || '—'}

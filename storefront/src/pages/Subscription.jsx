@@ -8,10 +8,16 @@ import {
   LogIn,
   Utensils,
   RefreshCw,
+  Sparkles,
+  CalendarCheck,
+  ShieldCheck,
+  CheckCircle2,
 } from 'lucide-react'
 import AppShell from '../components/layout/AppShell'
 import PageHeader from '../components/layout/PageHeader'
 import Badge, { formatStatusLabel } from '../components/ui/Badge'
+import { PlanCardSkeleton } from '../components/ui/Skeleton'
+import Button from '../components/ui/Button'
 import { listMySubscriptions, getSubscriptionDetails, listSubscribableSalads } from '../api/subscriptions'
 import { getPlanDietaryType } from '../lib/planDietaryType'
 import { useAuth } from '../context/AuthContext'
@@ -73,29 +79,27 @@ export default function Subscription() {
   }, [subscribablePlans, category])
 
   return (
-    <AppShell maxWidth="max-w-5xl">
-      <PageHeader title="Weekly Subscription Plans" />
-
-      <div className="px-4 py-4 sm:px-6 space-y-8">
+    <AppShell maxWidth="max-w-6xl">
+      <div className="px-4 py-4 sm:px-6 lg:px-8 space-y-10 animate-fade-in">
         {/* Active Subscriptions Section (for logged-in customers with active plans) */}
         {isAuthenticated && liveSubscriptions.length > 0 ? (
-          <section className="rounded-2xl border border-[#E6D9C5] bg-[#FFFEFC] p-4 sm:p-6 shadow-xs">
-            <div className="flex items-center justify-between gap-3 border-b border-[#E6D9C5] pb-3.5">
+          <section className="rounded-3xl border border-cream-300 bg-cream-50 p-6 sm:p-8 shadow-xs space-y-5">
+            <div className="flex items-center justify-between gap-3 border-b border-cream-300 pb-4">
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#9B2C2C]">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-chili-600 block">
                   Your Ongoing Service
                 </span>
-                <h2 className="font-serif text-lg sm:text-xl font-bold text-[#1C1917]">
+                <h2 className="font-serif text-xl sm:text-2xl font-bold text-ink-900 mt-0.5">
                   Active Subscriptions ({liveSubscriptions.length})
                 </h2>
               </div>
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-[#15803D]">
-                <span className="h-2 w-2 rounded-full bg-[#15803D] animate-pulse" />
-                Live Delivery Cycle
+              <span className="flex items-center gap-2 text-xs font-bold text-success-600 bg-success-50 px-3 py-1 rounded-full border border-success-200">
+                <span className="h-2 w-2 rounded-full bg-success-500 animate-pulse" />
+                Live Cycle
               </span>
             </div>
 
-            <div className="mt-4 space-y-3">
+            <div className="space-y-4">
               {liveSubscriptions.map((subscription, index) => (
                 <SubscriptionStatusCard
                   key={subscription.id}
@@ -107,127 +111,121 @@ export default function Subscription() {
           </section>
         ) : null}
 
-        {/* Header & Subtitle */}
-        <div className="border-b border-[#E6D9C5] pb-4">
-          <div className="flex items-center gap-2">
-            <span className="font-serif text-xs italic font-medium text-[#9B2C2C]">
-              “Safe, as your mother's home.”
-            </span>
+        {/* Editorial Page Header & Value Proposition */}
+        <div className="text-center max-w-2xl mx-auto space-y-3 pt-2">
+          <div className="inline-flex items-center gap-2 rounded-full bg-amber-100/70 border border-amber-300/60 px-4 py-1 text-xs font-serif italic text-chili-700">
+            <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+            <span>“Safe, as your mother&apos;s home.”</span>
           </div>
-          <h1 className="mt-1 font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[#1C1917]">
+
+          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-ink-900">
             Weekly Food & Meal Subscriptions
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-[#78716C]">
-            Fresh traditional South Indian home cooking delivered on your schedule. Skip any date with 1 tap.
+
+          <p className="text-xs sm:text-sm text-ink-600 leading-relaxed font-normal">
+            Wholesome South Indian cooking delivered fresh on your schedule. 100% cold-pressed oils, zero preservatives, and effortless 1-tap date skipping anytime.
           </p>
-        </div>
 
-        {/* Plans Catalog Section */}
-        <section>
-
-          {/* Dietary Tabs */}
-          <div className="mt-5">
+          {/* Compact Category Switcher — Clean, centered and balanced */}
+          <div className="pt-2">
             <CategoryPicker selected={category} onSelect={setCategory} counts={counts} />
           </div>
+        </div>
 
-          {/* Plans Grid */}
-          <div className="mt-6">
-            {plansQuery.isLoading ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="h-72 animate-pulse rounded-xl border border-[#E6D9C5] bg-[#F5ECE1]"
-                  />
-                ))}
+        {/* Plans Grid */}
+        <section aria-label="Available subscription meal plans">
+          {plansQuery.isLoading ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <PlanCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : plansQuery.isError ? (
+            <div className="rounded-3xl border border-chili-200 bg-chili-50 p-8 text-center space-y-3 max-w-md mx-auto">
+              <p className="font-serif text-lg font-bold text-chili-600">
+                Couldn&apos;t load subscription plans
+              </p>
+              <p className="text-xs text-ink-500">
+                Please check your internet connection or try again.
+              </p>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => plansQuery.refetch()}
+              >
+                <RefreshCw className="h-4 w-4" />
+                <span>Retry</span>
+              </Button>
+            </div>
+          ) : filteredPlans.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredPlans.map((plan) => (
+                <PlanCard key={plan.id} plan={plan} />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-3xl border border-cream-300 bg-cream-50 p-12 text-center max-w-md mx-auto space-y-3">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-cream-100 text-ink-400 border border-cream-300">
+                <Utensils className="h-7 w-7 stroke-[1.5]" />
               </div>
-            ) : plansQuery.isError ? (
-              <div className="rounded-xl border border-[#F9C5C5] bg-[#FDF2F2] p-8 text-center">
-                <p className="font-serif text-base font-bold text-[#9B2C2C]">
-                  Couldn't load subscription plans
-                </p>
-                <p className="mt-1 text-xs text-[#78716C]">
-                  Please check your internet connection or try again.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => plansQuery.refetch()}
-                  className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-[#9B2C2C] px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#7B1F23]"
-                >
-                  <RefreshCw className="h-3.5 w-3.5" />
-                  <span>Retry</span>
-                </button>
-              </div>
-            ) : filteredPlans.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredPlans.map((plan) => (
-                  <PlanCard key={plan.id} plan={plan} />
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] p-8 text-center max-w-md mx-auto">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#FAF6EF] text-[#78716C] border border-[#E6D9C5]">
-                  <Utensils className="h-6 w-6 stroke-[1.5]" />
-                </div>
-                <h3 className="mt-3 font-serif text-base font-bold text-[#1C1917]">
-                  No {category === 'VEG' ? 'Pure Vegetarian' : 'Non-Vegetarian'} plans currently available
-                </h3>
-                <p className="mt-1 text-xs text-[#78716C]">
-                  Please select another category or check back soon as new seasonal rotations are added.
-                </p>
-              </div>
-            )}
-          </div>
+              <h3 className="font-serif text-lg font-bold text-ink-900">
+                No {category === 'VEG' ? 'Pure Vegetarian' : 'Non-Vegetarian'} plans currently available
+              </h3>
+              <p className="text-xs text-ink-500 leading-relaxed">
+                Please select another category or check back soon as our kitchen regularly announces new meal rotations.
+              </p>
+            </div>
+          )}
         </section>
 
         {/* How Subscriptions Work 3-Step Guide */}
-        <section className="rounded-2xl border border-[#E6D9C5] bg-[#FFFEFC] p-6 shadow-xs">
-          <div className="text-center max-w-lg mx-auto">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#9B2C2C]">
+        <section className="rounded-3xl border border-cream-300 bg-cream-50 p-8 sm:p-10 shadow-xs">
+          <div className="text-center max-w-lg mx-auto space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-chili-600 block">
               Simple & Flexible
             </span>
-            <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#1C1917] mt-0.5">
+            <h2 className="font-serif text-2xl font-bold text-ink-900">
               How Manoharam Subscriptions Work
             </h2>
-            <p className="mt-1 text-xs text-[#78716C]">
-              Three easy steps to enjoy healthy, comforting home meals every single day.
+            <p className="text-xs text-ink-500 leading-relaxed">
+              Wholesome home meals without the daily hassle of ordering.
             </p>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="flex flex-col items-center text-center p-4 rounded-xl bg-[#FAF6EF] border border-[#E6D9C5]/60">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#9B2C2C] text-white font-serif font-bold text-sm shadow-xs">
+          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
+            <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-cream-100/70 border border-cream-300/70 space-y-2.5">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-chili-600 text-cream-50 font-serif font-bold text-sm shadow-xs">
                 1
               </span>
-              <h3 className="mt-3 font-serif text-sm font-bold text-[#1C1917]">
+              <h3 className="font-serif text-base font-bold text-ink-900">
                 Choose Your Plan
               </h3>
-              <p className="mt-1 text-xs text-[#78716C] leading-relaxed">
-                Pick your preferred weekly menu rotation, handcrafted pickle delight, or seasonal lunch packs.
+              <p className="text-xs text-ink-600 leading-relaxed">
+                Pick your preferred weekly menu rotation, handcrafted pickle box, or lunch packs.
               </p>
             </div>
 
-            <div className="flex flex-col items-center text-center p-4 rounded-xl bg-[#FAF6EF] border border-[#E6D9C5]/60">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#9B2C2C] text-white font-serif font-bold text-sm shadow-xs">
+            <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-cream-100/70 border border-cream-300/70 space-y-2.5">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500 text-cream-50 font-serif font-bold text-sm shadow-xs">
                 2
               </span>
-              <h3 className="mt-3 font-serif text-sm font-bold text-[#1C1917]">
+              <h3 className="font-serif text-base font-bold text-ink-900">
                 Set Your Schedule
               </h3>
-              <p className="mt-1 text-xs text-[#78716C] leading-relaxed">
-                Select your start date and choose whether to exclude weekends. Preview your full delivery calendar.
+              <p className="text-xs text-ink-600 leading-relaxed">
+                Select your start date (1–4 weeks duration). Exclude weekends or skip specific days.
               </p>
             </div>
 
-            <div className="flex flex-col items-center text-center p-4 rounded-xl bg-[#FAF6EF] border border-[#E6D9C5]/60">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#9B2C2C] text-white font-serif font-bold text-sm shadow-xs">
+            <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-cream-100/70 border border-cream-300/70 space-y-2.5">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-success-600 text-cream-50 font-serif font-bold text-sm shadow-xs">
                 3
               </span>
-              <h3 className="mt-3 font-serif text-sm font-bold text-[#1C1917]">
+              <h3 className="font-serif text-base font-bold text-ink-900">
                 Fresh Daily Comfort
               </h3>
-              <p className="mt-1 text-xs text-[#78716C] leading-relaxed">
-                Piping hot or freshly packed food arrives at your door every morning. Skip any date with 1 tap.
+              <p className="text-xs text-ink-600 leading-relaxed">
+                Freshly cooked food arrives at your door every morning. Skip any date with 1 tap.
               </p>
             </div>
           </div>
@@ -235,22 +233,24 @@ export default function Subscription() {
 
         {/* Guest Banner (if not logged in) */}
         {!isAuthenticated ? (
-          <div className="rounded-xl border border-dashed border-[#9B2C2C]/30 bg-[#FCE4E4]/30 p-5 text-center sm:flex sm:items-center sm:justify-between sm:text-left">
+          <div className="rounded-3xl border border-cream-300 bg-gradient-to-r from-cream-50 via-cream-100 to-amber-50/50 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
             <div>
-              <p className="font-serif text-sm font-bold text-[#1C1917]">
+              <p className="font-serif text-lg font-bold text-ink-900">
                 Already have an active subscription with us?
               </p>
-              <p className="mt-0.5 text-xs text-[#78716C]">
-                Sign in to manage your schedule, pause dates, or view today's meal delivery.
+              <p className="text-xs text-ink-500 mt-1">
+                Sign in to manage your schedule, pause dates, or view today&apos;s meal delivery.
               </p>
             </div>
             <Link
               to="/login"
               state={{ from: { pathname: '/subscription' } }}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-[#9B2C2C] px-5 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#7B1F23] transition-colors sm:mt-0 shrink-0"
+              className="shrink-0"
             >
-              <LogIn className="h-3.5 w-3.5" />
-              <span>Sign In</span>
+              <Button variant="primary" size="md">
+                <LogIn className="h-4 w-4" />
+                <span>Sign In</span>
+              </Button>
             </Link>
           </div>
         ) : null}
@@ -276,62 +276,52 @@ function SubscriptionStatusCard({ subscription, detail }) {
 
   return (
     <Link to={`/subscriptions/${subscription.id}`} className="block group">
-      <div
-        className={[
-          'overflow-hidden rounded-xl border border-[#E6D9C5] bg-[#FFFEFC] p-4 shadow-xs transition-all duration-150',
-          'border-l-4 hover:border-[#9B2C2C]/30 hover:shadow-md',
-          isPending
-            ? 'border-l-[#D97706]'
-            : isActive
-            ? 'border-l-[#15803D]'
-            : 'border-l-[#78716C]',
-        ].join(' ')}
-      >
+      <div className="overflow-hidden rounded-2xl border border-cream-300 bg-cream-50 p-5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-chili-300 hover:shadow-md">
         <div className="flex items-center justify-between gap-3">
           <Badge tone={isPending ? 'warning' : isActive ? 'success' : 'neutral'}>
             {formatStatusLabel(subscription.status)}
           </Badge>
           {details?.price_per_week !== undefined ? (
-            <p className="font-serif text-sm font-bold text-[#9B2C2C]">
+            <p className="font-serif text-sm font-bold text-chili-600 tabular-nums">
               ₹{Number(details.price_per_week).toFixed(0)}/week
             </p>
           ) : null}
         </div>
 
-        <div className="mt-3 flex items-start justify-between gap-3">
+        <div className="mt-3.5 flex items-start justify-between gap-3">
           <div>
-            <h3 className="font-serif text-base font-bold text-[#1C1917] group-hover:text-[#9B2C2C] transition-colors">
+            <h3 className="font-serif text-base font-bold text-ink-900 group-hover:text-chili-600 transition-colors">
               {subscription.plan_name}
             </h3>
             {products.length > 0 || details?.description ? (
-              <p className="mt-0.5 line-clamp-1 text-xs text-[#78716C]">
+              <p className="mt-1 line-clamp-1 text-xs text-ink-500">
                 {products.length > 0 ? products.map((p) => p.name).join(' · ') : details?.description}
               </p>
             ) : null}
           </div>
-          <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-[#A8A29E] group-hover:text-[#9B2C2C] group-hover:translate-x-0.5 transition-all" />
+          <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-ink-400 group-hover:text-chili-600 group-hover:translate-x-1 transition-all" />
         </div>
 
-        <div className="mt-3 flex items-center gap-1.5 text-xs text-[#78716C]">
-          <CalendarClock className="h-3.5 w-3.5 text-[#9B2C2C]" />
+        <div className="mt-3 flex items-center gap-1.5 text-xs text-ink-500">
+          <CalendarClock className="h-4 w-4 text-chili-600" />
           <span>
             {subscription.start_date} – {subscription.end_date}
           </span>
         </div>
 
         {progress !== null ? (
-          <div className="mt-3 border-t border-[#E6D9C5] pt-2.5">
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#FAF6EF]">
-              <div className="h-full rounded-full bg-[#15803D]" style={{ width: `${progress}%` }} />
+          <div className="mt-3.5 border-t border-cream-300 pt-3">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-cream-200">
+              <div className="h-full rounded-full bg-success-500 transition-all duration-500" style={{ width: `${progress}%` }} />
             </div>
-            <p className="mt-1 text-[11px] text-[#78716C]">{progress}% through this cycle</p>
+            <p className="mt-1 text-[11px] text-ink-500 font-medium">{progress}% through this delivery cycle</p>
           </div>
         ) : null}
 
         {isPending ? (
-          <div className="mt-3 flex items-start gap-2 rounded-lg bg-[#FEF7DA] p-2.5 text-xs text-[#92400E]">
-            <Clock3 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#D97706]" />
-            <p>Our kitchen is reviewing your subscription request — you will be notified upon confirmation.</p>
+          <div className="mt-3.5 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-700">
+            <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+            <p className="leading-relaxed">Our kitchen is reviewing your subscription request — you will be notified upon confirmation.</p>
           </div>
         ) : null}
       </div>
