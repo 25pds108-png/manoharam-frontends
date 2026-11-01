@@ -1,19 +1,19 @@
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
-  AlertCircle,
   ArrowLeft,
   ArrowRight,
-  Beef,
-  Droplet,
-  Flame,
-  Leaf,
-  RefreshCw,
-  Wheat,
   ShieldCheck,
   CalendarCheck,
   Clock,
+  Check,
   Sparkles,
+  ChevronRight,
+  AlertCircle,
+  RefreshCw,
+  Utensils,
+  Leaf,
 } from 'lucide-react'
 import AppShell from '../components/layout/AppShell'
 import ProductImage from '../components/ProductImage'
@@ -21,6 +21,54 @@ import Button from '../components/ui/Button'
 import { getPlanDetails } from '../api/subscriptions'
 import { getPlanDietaryType } from '../lib/planDietaryType'
 import { useAuth } from '../context/AuthContext'
+
+/**
+ * Strips development prefixes like [Test] or [Verify] in customer-facing display.
+ */
+function cleanText(text) {
+  if (!text) return ''
+  return text.replace(/^\[(Test|Verify)\]\s*/i, '').trim()
+}
+
+/**
+ * Traditional Indian vegetarian / non-vegetarian dietary mark.
+ */
+function DietaryMark({ isVeg = true, showLabel = true }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full bg-cream-50/95 px-3 py-1 shadow-xs border border-cream-300/80 backdrop-blur-md select-none`}
+      title={isVeg ? '100% Vegetarian' : 'Non-Vegetarian'}
+    >
+      <span
+        className={`inline-flex h-3.5 w-3.5 items-center justify-center rounded-[2px] border-[1.5px] bg-white shrink-0 ${
+          isVeg ? 'border-success-500' : 'border-chili-600'
+        }`}
+      >
+        <span
+          className={`h-1.5 w-1.5 rounded-full ${
+            isVeg ? 'bg-success-500' : 'bg-chili-600'
+          }`}
+        />
+      </span>
+      {showLabel ? (
+        <span
+          className={`text-[11px] font-bold uppercase tracking-wider ${
+            isVeg ? 'text-success-700' : 'text-chili-700'
+          }`}
+        >
+          {isVeg ? 'Pure Veg' : 'Non-Veg'}
+        </span>
+      ) : null}
+    </span>
+  )
+}
+
+const DURATION_CYCLES = [
+  { weeks: 1, label: '1 Week', subtitle: '7-Day Rotation' },
+  { weeks: 2, label: '2 Weeks', subtitle: '14-Day Delivery' },
+  { weeks: 3, label: '3 Weeks', subtitle: '21-Day Delivery' },
+  { weeks: 4, label: '4 Weeks', subtitle: 'Monthly Cycle', badge: 'Best Value' },
+]
 
 export default function PlanDetails() {
   const { planId } = useParams()
@@ -36,216 +84,558 @@ export default function PlanDetails() {
   const products = data?.products ?? []
   const dietaryType = plan ? getPlanDietaryType(plan) : 'VEG'
   const isVeg = dietaryType === 'VEG'
-  const heroImage = plan?.image_url || plan?.image || ''
 
-  const totals = products.reduce(
-    (acc, p) => ({
-      calories: acc.calories + (p.nutrition?.calories ?? 0),
-      protein: acc.protein + (p.nutrition?.protein ?? 0),
-      carbs: acc.carbs + (p.nutrition?.carbs ?? 0),
-      fat: acc.fat + (p.nutrition?.fat ?? 0),
-      fiber: acc.fiber + (p.nutrition?.fiber ?? 0),
-    }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 },
-  )
+  const cleanPlanName = useMemo(() => {
+    if (!plan?.name) return 'South Indian Meal Subscription'
+    return cleanText(plan.name)
+  }, [plan?.name])
+
+  // Dynamic image management: default to plan's master image, with fallback to first product
+  const defaultImage = useMemo(() => {
+    return plan?.image_url || plan?.image || products[0]?.image_url || ''
+  }, [plan, products])
+
+  const [activePhoto, setActivePhoto] = useState(null)
+  const [selectedWeeks, setSelectedWeeks] = useState(1)
+
+  // Sync active photo whenever the plan changes
+  useEffect(() => {
+    if (defaultImage) {
+      setActivePhoto(defaultImage)
+    }
+  }, [defaultImage])
+
+  // Update dynamic SEO title
+  useEffect(() => {
+    if (cleanPlanName) {
+      document.title = `${cleanPlanName} — Weekly Meal Subscription | Manoharam Real Foods`
+    }
+    return () => {
+      document.title = "Manoharam Real Foods — Safe, as your mother's home."
+    }
+  }, [cleanPlanName])
 
   const pricePerWeek = Number(plan?.price_per_week ?? 0)
-  const pricePerDay = pricePerWeek / 7
+  const totalPrice = pricePerWeek * selectedWeeks
+  const pricePerDay = pricePerWeek > 0 ? Math.round(pricePerWeek / 7) : 0
+
+  // Optional nutrition totals (only rendered if genuine non-zero nutrition data exists)
+  const totals = useMemo(() => {
+    return products.reduce(
+      (acc, p) => ({
+        calories: acc.calories + (p.nutrition?.calories ?? 0),
+        protein: acc.protein + (p.nutrition?.protein ?? 0),
+        carbs: acc.carbs + (p.nutrition?.carbs ?? 0),
+        fat: acc.fat + (p.nutrition?.fat ?? 0),
+        fiber: acc.fiber + (p.nutrition?.fiber ?? 0),
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 },
+    )
+  }, [products])
+
+  const hasGenuineNutrition = totals.calories > 0
+
+  // Curated gallery items (plan hero image + each unique product image)
+  const galleryItems = useMemo(() => {
+    const list = []
+    if (defaultImage) {
+      list.push({
+        id: 'plan-main',
+        title: 'Complete Plan Feast',
+        imageUrl: defaultImage,
+      })
+    }
+    products.forEach((p, idx) => {
+      if (p.image_url && !list.some((item) => item.imageUrl === p.image_url)) {
+        list.push({
+          id: `product-${p.id}`,
+          title: `Meal #${p.delivery_order || idx + 1}: ${cleanText(p.name)}`,
+          imageUrl: p.image_url,
+        })
+      }
+    })
+    return list
+  }, [defaultImage, products])
+
+  const handleSubscribe = () => {
+    if (!plan) return
+    const statePayload = {
+      plan,
+      weeks: selectedWeeks,
+    }
+
+    if (!isAuthenticated) {
+      navigate('/login', {
+        state: {
+          from: {
+            pathname: `/subscribe/${plan.id}`,
+            state: statePayload,
+          },
+        },
+      })
+      return
+    }
+
+    navigate(`/subscribe/${plan.id}`, { state: statePayload })
+  }
 
   return (
-    <AppShell maxWidth="max-w-4xl">
-      {/* Top Back Navigation Bar */}
-      <div className="sticky top-0 z-20 flex items-center justify-between gap-3 bg-cream-100/95 px-4 py-3.5 backdrop-blur-md border-b border-cream-300">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cream-50 text-ink-900 shadow-xs border border-cream-300 hover:bg-cream-100 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-chili-500"
-          aria-label="Go back"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="flex-1 min-w-0 text-center sm:text-left">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-chili-600 block">
-            Plan Details
+    <AppShell maxWidth="max-w-7xl">
+      <div className="px-4 py-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12 pb-32 sm:pb-24">
+        {/* =========================================================================
+            1. REFINED BREADCRUMB NAVIGATION
+            ========================================================================= */}
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-ink-500">
+          <Link to="/" className="hover:text-chili-600 transition-colors">
+            Home
+          </Link>
+          <ChevronRight className="h-3.5 w-3.5 text-cream-400 select-none" />
+          <Link to="/subscription" className="hover:text-chili-600 transition-colors">
+            Weekly Subscriptions
+          </Link>
+          <ChevronRight className="h-3.5 w-3.5 text-cream-400 select-none" />
+          <span className="font-semibold text-ink-900 truncate max-w-[200px] sm:max-w-md">
+            {cleanPlanName}
           </span>
-          <h1 className="truncate font-serif text-base sm:text-lg font-bold text-ink-900">
-            {plan?.name ?? 'Plan Details'}
-          </h1>
-        </div>
-        <div className="w-10 shrink-0" />
-      </div>
+        </nav>
 
-      <div className="px-4 pb-48 pt-4 sm:px-6 md:pb-36 space-y-8 animate-fade-in">
+        {/* Loading skeleton */}
         {isLoading ? (
           <PlanDetailsSkeleton />
         ) : isError || !plan ? (
-          <div className="mt-8 flex flex-col items-center gap-3 rounded-3xl border border-dashed border-chili-200 bg-chili-50 p-8 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cream-50 text-chili-600 shadow-xs">
+          /* Error feedback */
+          <div className="mx-auto max-w-lg rounded-3xl border border-dashed border-chili-200 bg-chili-50/70 p-8 text-center space-y-4">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-cream-50 text-chili-600 shadow-xs">
               <AlertCircle className="h-6 w-6" />
             </div>
-            <p className="font-serif text-lg font-bold text-ink-900">This plan could not be loaded</p>
-            <p className="text-xs text-ink-500">Please check your connection and retry.</p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => refetch()}
-              className="mt-2"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              <span>Retry</span>
-            </Button>
+            <div>
+              <h2 className="font-serif text-xl font-bold text-ink-900">Subscription Plan Unavailable</h2>
+              <p className="mt-1 text-xs text-ink-600">
+                This meal rotation could not be retrieved from the kitchen database.
+              </p>
+            </div>
+            <div className="flex justify-center gap-3 pt-2">
+              <Button variant="outline" size="sm" onClick={() => refetch()}>
+                <RefreshCw className="h-4 w-4" />
+                <span>Retry</span>
+              </Button>
+              <Link to="/subscription">
+                <Button variant="primary" size="sm">
+                  View All Plans
+                </Button>
+              </Link>
+            </div>
           </div>
         ) : (
           <>
-            {/* Plan Hero Presentation */}
-            <div className="relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden rounded-3xl border border-cream-300 bg-cream-200 shadow-md">
-              <ProductImage
-                src={heroImage}
-                alt={plan.name}
-                category={plan.category}
-                className="h-full w-full object-cover"
-              />
+            {/* =========================================================================
+                2. MAIN PLAN PRESENTATION — EDITORIAL FOOD-FIRST COMPOSITION (2 COLUMNS)
+                ========================================================================= */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+              {/* LEFT COLUMN (7 Cols): Master Culinary Photography Canvas */}
+              <div className="lg:col-span-7 space-y-4">
+                <div className="relative aspect-[16/11] sm:aspect-[4/3] w-full overflow-hidden rounded-[2rem] border border-amber-900/15 bg-gradient-to-b from-[#FAF4EB] via-[#F6EFE5] to-[#FAF4EB] shadow-md select-none group">
+                  <ProductImage
+                    src={activePhoto || defaultImage}
+                    alt={cleanPlanName}
+                    category={plan.category}
+                    className="h-full w-full object-cover object-center transition-all duration-700 ease-out group-hover:scale-103"
+                    loading="eager"
+                  />
 
-              {/* Ambient overlay */}
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-950/80 via-transparent to-transparent" />
+                  {/* Soft ambient vignette */}
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink-950/40 via-transparent to-transparent opacity-80" />
 
-              {/* Dietary Pill */}
-              <div className="absolute left-4 top-4">
-                <DietaryPill isVeg={isVeg} />
+                  {/* Dietary Badge Pill */}
+                  <div className="absolute top-4 left-4 z-10">
+                    <DietaryMark isVeg={isVeg} />
+                  </div>
+
+                  {/* Frequency Pill */}
+                  <div className="absolute top-4 right-4 z-10 hidden sm:block">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-ink-950/75 backdrop-blur-md px-3.5 py-1 text-xs font-semibold text-cream-100 border border-cream-100/20 shadow-xs">
+                      <Clock className="h-3 w-3 text-amber-400" />
+                      Daily Lunch Rotation
+                    </span>
+                  </div>
+
+                  {/* Active Dish Tag (when browsing specific rotation items) */}
+                  {activePhoto && activePhoto !== defaultImage ? (
+                    <div className="absolute bottom-4 left-4 right-4 z-10">
+                      <div className="rounded-xl bg-ink-950/85 backdrop-blur-md px-4 py-2 border border-cream-100/20 shadow-lg text-cream-50 flex items-center justify-between gap-2">
+                        <span className="text-xs font-medium text-cream-100 truncate">
+                          {galleryItems.find((g) => g.imageUrl === activePhoto)?.title || 'Curated Meal Dish'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setActivePhoto(defaultImage)}
+                          className="shrink-0 text-[11px] font-bold text-amber-300 hover:text-amber-200 underline"
+                        >
+                          View Master Feast
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* Sub-gallery photo switcher: if multiple genuine dishes exist */}
+                {galleryItems.length > 1 ? (
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center justify-between text-xs text-ink-500 font-medium">
+                      <span>Explore meals in this plan:</span>
+                      <span className="text-[11px] text-ink-400">Tap to preview photo</span>
+                    </div>
+
+                    <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+                      {galleryItems.map((item) => {
+                        const isCurrent = activePhoto === item.imageUrl
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => setActivePhoto(item.imageUrl)}
+                            className={`group relative flex-shrink-0 w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all ${
+                              isCurrent
+                                ? 'border-chili-600 ring-2 ring-chili-400/30 scale-102 shadow-sm'
+                                : 'border-cream-300/80 hover:border-amber-700/40 opacity-80 hover:opacity-100'
+                            }`}
+                            title={item.title}
+                          >
+                            <ProductImage
+                              src={item.imageUrl}
+                              alt={item.title}
+                              className="h-full w-full object-cover"
+                            />
+                            {isCurrent ? (
+                              <div className="absolute inset-0 bg-chili-600/10 pointer-events-none" />
+                            ) : null}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
-              {/* Price badge */}
-              <div className="absolute bottom-4 right-4 rounded-2xl bg-ink-950/85 px-4 py-2 text-cream-50 shadow-md backdrop-blur-md border border-cream-300/20">
-                <span className="font-serif text-xl sm:text-2xl font-bold text-amber-300 tabular-nums">
-                  ₹{pricePerWeek.toFixed(0)}
-                </span>
-                <span className="font-normal text-cream-200 text-xs"> /week</span>
-              </div>
-            </div>
+              {/* RIGHT COLUMN (5 Cols): Plan Information, Duration & Purchasing Controls */}
+              <div className="lg:col-span-5 space-y-6 lg:pl-2">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-block text-[11px] font-bold uppercase tracking-[0.2em] text-chili-700">
+                      {isVeg ? 'Vegetarian Homestyle Plan' : 'Non-Vegetarian Meal Plan'}
+                    </span>
+                    <span className="text-cream-400 select-none">·</span>
+                    <span className="text-xs text-ink-500 font-medium">
+                      {products.length} Delicac{products.length === 1 ? 'y' : 'ies'} in Rotation
+                    </span>
+                  </div>
 
-            {/* Plan Header Info */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="rounded-md bg-chili-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-chili-600">
-                  {plan.category || 'Continuous Rotation'}
-                </span>
-                <span className="font-serif text-xs italic font-semibold text-chili-600">
-                  “Safe, as your mother&apos;s home.”
-                </span>
-              </div>
+                  <h1 className="font-serif text-3xl sm:text-4xl font-bold text-ink-950 leading-tight tracking-tight">
+                    {cleanPlanName}
+                  </h1>
 
-              <h2 className="font-serif text-2xl sm:text-4xl font-bold text-ink-900 leading-tight">
-                {plan.name}
-              </h2>
+                  {plan.description ? (
+                    <p className="text-sm leading-relaxed text-ink-700 font-sans font-normal pt-1">
+                      {plan.description}
+                    </p>
+                  ) : null}
+                </div>
 
-              {plan.description ? (
-                <p className="text-sm sm:text-base leading-relaxed text-ink-700 font-sans">
-                  {plan.description}
-                </p>
-              ) : null}
-
-              {/* Daily breakdown estimate */}
-              <div className="flex items-center gap-4 pt-2 text-xs text-ink-600 font-medium">
-                <span className="inline-flex items-center gap-1.5 text-chili-600 font-semibold">
-                  <Sparkles className="h-4 w-4" />
-                  <span>≈ ₹{pricePerDay.toFixed(0)} / day</span>
-                </span>
-                <span className="text-cream-300">·</span>
-                <span className="inline-flex items-center gap-1.5 text-amber-600">
-                  <CalendarCheck className="h-4 w-4" />
-                  <span>1-Tap Date Skipping Anytime</span>
-                </span>
-                <span className="text-cream-300">·</span>
-                <span className="inline-flex items-center gap-1.5 text-success-600">
-                  <Clock className="h-4 w-4" />
-                  <span>Fresh Morning Delivery</span>
-                </span>
-              </div>
-            </div>
-
-            {/* Nutritional Summary Card */}
-            {products.length > 0 ? (
-              <div className="rounded-3xl border border-cream-300 bg-cream-50 p-6 shadow-xs space-y-4">
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-chili-600 block">
-                    Health & Wellness
+                {/* Primary Price Lockup */}
+                <div className="rounded-2xl border border-cream-300/80 bg-cream-50/70 p-4.5 sm:p-5 shadow-2xs space-y-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-ink-400 block">
+                    Subscription Pricing
                   </span>
-                  <h3 className="font-serif text-lg font-bold text-ink-900">
+                  <div className="flex items-baseline gap-2.5 flex-wrap">
+                    <span className="font-serif text-3xl sm:text-4xl font-extrabold text-chili-600 tabular-nums">
+                      ₹{totalPrice.toLocaleString('en-IN')}
+                    </span>
+                    <span className="text-xs sm:text-sm text-ink-600 font-medium">
+                      for {selectedWeeks} {selectedWeeks === 1 ? 'week' : 'weeks'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs text-ink-500 pt-1">
+                    <span className="font-medium text-ink-700">₹{pricePerWeek.toLocaleString('en-IN')} / week</span>
+                    <span className="text-cream-400 select-none">·</span>
+                    <span>≈ ₹{pricePerDay.toLocaleString('en-IN')} per delivery day</span>
+                  </div>
+                </div>
+
+                {/* Subscription Duration Selector */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold uppercase tracking-wider text-ink-800">
+                      Choose Duration Cycle
+                    </label>
+                    <span className="text-[11px] text-ink-500 font-normal">Pause or cancel anytime</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {DURATION_CYCLES.map((cycle) => {
+                      const isSelected = selectedWeeks === cycle.weeks
+                      return (
+                        <button
+                          key={cycle.weeks}
+                          type="button"
+                          onClick={() => setSelectedWeeks(cycle.weeks)}
+                          className={`relative flex flex-col p-3 rounded-2xl text-left border-2 transition-all ${
+                            isSelected
+                              ? 'border-chili-600 bg-cream-50 shadow-xs'
+                              : 'border-cream-300/80 bg-white hover:border-cream-400 hover:bg-cream-50/50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1 w-full">
+                            <span
+                              className={`font-serif text-sm font-bold ${
+                                isSelected ? 'text-chili-700' : 'text-ink-900'
+                              }`}
+                            >
+                              {cycle.label}
+                            </span>
+                            {isSelected ? (
+                              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-chili-600 text-cream-50">
+                                <Check className="h-2.5 w-2.5 stroke-[3]" />
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <span className="text-[11px] text-ink-500 mt-0.5">
+                            {cycle.subtitle}
+                          </span>
+
+                          <span className="font-serif text-xs font-semibold text-ink-800 mt-2">
+                            ₹{(pricePerWeek * cycle.weeks).toLocaleString('en-IN')}
+                          </span>
+
+                          {cycle.badge ? (
+                            <span className="absolute -top-2 right-3 rounded-full bg-amber-500 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-ink-950 shadow-2xs">
+                              {cycle.badge}
+                            </span>
+                          ) : null}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Delivery & Schedule Information (Clean & Supported by Backend) */}
+                <div className="space-y-2.5 pt-1 border-t border-cream-200">
+                  <div className="flex items-start gap-2.5 text-xs text-ink-600">
+                    <CalendarCheck className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="font-semibold text-ink-900">1-Tap Date Skipping:</strong> You can skip any date with full rollover credits directly from your subscription calendar.
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5 text-xs text-ink-600">
+                    <Clock className="h-4 w-4 text-success-600 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="font-semibold text-ink-900">Morning Kitchen Dispatch:</strong> Freshly cooked hot meals delivered straight to your door before lunch (10:30 AM – 12:30 PM).
+                    </div>
+                  </div>
+                </div>
+
+                {/* Desktop Primary Purchase Action Area */}
+                <div className="pt-2 space-y-2">
+                  <button
+                    type="button"
+                    onClick={handleSubscribe}
+                    className="button-press spring-bounce w-full flex items-center justify-center gap-2.5 rounded-2xl bg-chili-600 px-6 py-4 text-base font-bold text-cream-50 shadow-md shadow-chili-950/20 hover:bg-chili-500 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 transition-all cursor-pointer"
+                  >
+                    <span>
+                      {isAuthenticated ? `Continue to Schedule — ₹${totalPrice.toLocaleString('en-IN')}` : `Sign In to Subscribe — ₹${totalPrice.toLocaleString('en-IN')}`}
+                    </span>
+                    <ArrowRight className="h-5 w-5" />
+                  </button>
+
+                  <p className="text-center text-[11px] text-ink-400">
+                    Select your delivery start date on the next step. Cancel or pause anytime.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* =========================================================================
+                3. CURATED ROTATION MENU — THE DELICACIES IN THIS PLAN
+                ========================================================================= */}
+            <section className="pt-8 border-t border-cream-300 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-chili-700 block">
+                    Curated Kitchen Menu
+                  </span>
+                  <h2 className="font-serif text-2xl sm:text-3xl font-bold text-ink-950 mt-0.5">
+                    Included Delicacies & Rotation ({products.length})
+                  </h2>
+                </div>
+                <p className="text-xs text-ink-500">
+                  Delivered sequentially throughout your subscription cycle
+                </p>
+              </div>
+
+              {products.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-cream-300 bg-cream-50 p-8 text-center text-xs text-ink-500">
+                  Daily delicacy rotation for this plan will be published shortly by our head chef.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {products.map((product, idx) => {
+                    const cleanProductName = cleanText(product.name)
+                    const portionText =
+                      product.quantity && product.unit
+                        ? `${product.quantity} ${product.unit}`
+                        : product.unit || ''
+
+                    return (
+                      <div
+                        key={product.id || idx}
+                        className="group flex items-center gap-4 rounded-2xl border border-cream-300/80 bg-cream-50/70 p-3.5 sm:p-4 shadow-2xs hover:border-chili-300 hover:bg-cream-50 transition-all"
+                      >
+                        {/* Delivery Order Sequence Tag */}
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-chili-50 text-xs font-bold text-chili-700 border border-chili-200/80 tabular-nums">
+                          #{product.delivery_order || idx + 1}
+                        </div>
+
+                        {/* Delicacy Thumbnail */}
+                        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-cream-200 border border-cream-300/80">
+                          <ProductImage
+                            src={product.image_url}
+                            alt={cleanProductName}
+                            category={plan.category}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        </div>
+
+                        {/* Title & Portion */}
+                        <div className="min-w-0 flex-1">
+                          <h3 className="truncate font-serif text-base font-bold text-ink-900 group-hover:text-chili-600 transition-colors">
+                            {cleanProductName}
+                          </h3>
+                          {portionText ? (
+                            <p className="text-xs text-ink-500 mt-0.5">
+                              Portion: {portionText}
+                            </p>
+                          ) : null}
+
+                          {/* Preview button for this delicacy */}
+                          {product.image_url ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActivePhoto(product.image_url)
+                                window.scrollTo({ top: 0, behavior: 'smooth' })
+                              }}
+                              className="mt-1 text-[11px] font-semibold text-chili-600 hover:underline inline-block"
+                            >
+                              Show photograph ↑
+                            </button>
+                          ) : null}
+                        </div>
+
+                        {/* Conditional nutrition indicator (only if genuinely recorded in DB) */}
+                        {product.nutrition?.calories ? (
+                          <div className="hidden sm:flex shrink-0 items-center gap-1 text-xs font-semibold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
+                            <span className="tabular-nums">{Math.round(product.nutrition.calories)} kcal</span>
+                          </div>
+                        ) : null}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </section>
+
+            {/* Genuine Nutrition Overview (ONLY rendered if real non-zero nutrition values exist) */}
+            {hasGenuineNutrition ? (
+              <section className="rounded-3xl border border-cream-300 bg-cream-50 p-6 space-y-4 shadow-2xs">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-chili-700 block">
+                    Nutritional Profile
+                  </span>
+                  <h3 className="font-serif text-lg font-bold text-ink-950">
                     Weekly Nutritional Overview
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                  <NutritionStat icon={Flame} label="Calories" value={Math.round(totals.calories)} />
-                  <NutritionStat icon={Beef} label="Protein" value={Math.round(totals.protein)} unit="g" />
-                  <NutritionStat icon={Wheat} label="Carbs" value={Math.round(totals.carbs)} unit="g" />
-                  <NutritionStat icon={Droplet} label="Fat" value={Math.round(totals.fat)} unit="g" />
-                  <NutritionStat icon={Leaf} label="Fiber" value={Math.round(totals.fiber)} unit="g" />
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
+                  <div className="rounded-xl border border-cream-200 bg-white p-3">
+                    <p className="font-serif text-lg font-bold text-ink-900 tabular-nums">
+                      {Math.round(totals.calories)}
+                    </p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-ink-500">kcal</p>
+                  </div>
+                  <div className="rounded-xl border border-cream-200 bg-white p-3">
+                    <p className="font-serif text-lg font-bold text-ink-900 tabular-nums">
+                      {Math.round(totals.protein)}g
+                    </p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-ink-500">Protein</p>
+                  </div>
+                  <div className="rounded-xl border border-cream-200 bg-white p-3">
+                    <p className="font-serif text-lg font-bold text-ink-900 tabular-nums">
+                      {Math.round(totals.carbs)}g
+                    </p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-ink-500">Carbs</p>
+                  </div>
+                  <div className="rounded-xl border border-cream-200 bg-white p-3">
+                    <p className="font-serif text-lg font-bold text-ink-900 tabular-nums">
+                      {Math.round(totals.fat)}g
+                    </p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-ink-500">Fat</p>
+                  </div>
+                  <div className="rounded-xl border border-cream-200 bg-white p-3">
+                    <p className="font-serif text-lg font-bold text-ink-900 tabular-nums">
+                      {Math.round(totals.fiber)}g
+                    </p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-ink-500">Fiber</p>
+                  </div>
                 </div>
-              </div>
+              </section>
             ) : null}
 
-            {/* Included products */}
-            <div className="space-y-4">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-chili-600 block">
-                  Curated Kitchen Menu
-                </span>
-                <h3 className="font-serif text-xl font-bold text-ink-900">
-                  Included Delicacies & Rotations ({products.length})
-                </h3>
+            {/* =========================================================================
+                4. KITCHEN PURITY REASSURANCE STRIP
+                ========================================================================= */}
+            <div className="rounded-2xl border border-amber-900/15 bg-gradient-to-r from-[#FAF4EB] via-[#F6EFE5] to-[#FAF4EB] p-5 sm:p-6 shadow-2xs flex items-start gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-chili-600 text-cream-50 shadow-xs">
+                <ShieldCheck className="h-5 w-5" />
               </div>
-
-              {products.length === 0 ? (
-                <div className="rounded-2xl border border-cream-300 bg-cream-50 p-6 text-center text-xs text-ink-500">
-                  Items for this plan rotation will be announced soon.
-                </div>
-              ) : (
-                <ul className="space-y-3">
-                  {products.map((product) => (
-                    <ProductRow key={product.id} product={product} />
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {/* Quality Standard */}
-            <div className="flex items-center gap-3.5 rounded-2xl border border-cream-300 bg-cream-50 p-5 text-xs text-ink-700 shadow-2xs">
-              <ShieldCheck className="h-6 w-6 text-success-500 shrink-0" />
-              <p className="leading-relaxed">
-                <strong className="font-bold text-ink-900">Kitchen Purity Guarantee:</strong> Every meal rotation is slow-cooked fresh on the delivery morning using 100% cold-pressed oils, stone-ground masalas, and zero artificial preservatives. Safe for everyone in your family.
-              </p>
+              <div className="space-y-1 text-xs text-ink-700 leading-relaxed">
+                <p className="font-serif text-sm font-bold text-ink-950">
+                  Manoharam Kitchen Purity Commitment
+                </p>
+                <p>
+                  Every subscription rotation is prepared fresh at dawn using 100% cold-pressed sesame and groundnut oils, stone-ground masalas, and zero artificial preservatives. Safe and wholesome for your entire family, exactly like food cooked with motherly care.
+                </p>
+              </div>
             </div>
           </>
         )}
       </div>
 
-      {/* Sticky Bottom Subscribe CTA */}
+      {/* =========================================================================
+          5. MOBILE STICKY PURCHASE BAR (Appears on screens < lg so user never loses CTA)
+          ========================================================================= */}
       {!isLoading && plan ? (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-cream-300 bg-cream-100/95 px-4 py-4 backdrop-blur-md shadow-2xl">
-          <div className="flex items-center justify-between gap-4 mx-auto max-w-4xl">
+        <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden border-t border-cream-300 bg-cream-100/95 px-4 py-3.5 backdrop-blur-md shadow-2xl">
+          <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
             <div>
-              <p className="text-[10px] uppercase font-bold tracking-wider text-ink-500">Weekly plan rate</p>
-              <p className="font-serif text-xl sm:text-2xl font-bold text-chili-600 tabular-nums leading-none mt-0.5">
-                ₹{pricePerWeek.toFixed(0)}
-                <span className="text-xs font-normal text-ink-500"> /week</span>
+              <p className="text-[10px] uppercase font-bold tracking-wider text-ink-500">
+                {selectedWeeks} {selectedWeeks === 1 ? 'Week' : 'Weeks'} Plan
+              </p>
+              <p className="font-serif text-xl font-bold text-chili-600 tabular-nums leading-none mt-0.5">
+                ₹{totalPrice.toLocaleString('en-IN')}
               </p>
             </div>
-            {isAuthenticated ? (
-              <Link to={`/subscribe/${plan.id}`}>
-                <Button variant="primary" size="lg" className="px-6 py-3.5 shadow-md">
-                  <span>Continue to Schedule</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            ) : (
-              <Link to="/login" state={{ from: { pathname: `/subscribe/${plan.id}` } }}>
-                <Button variant="primary" size="lg" className="px-6 py-3.5 shadow-md">
-                  <span>Sign In to Subscribe</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            )}
+
+            <button
+              type="button"
+              onClick={handleSubscribe}
+              className="button-press spring-bounce flex items-center gap-2 rounded-xl bg-chili-600 px-5 py-3 text-sm font-bold text-cream-50 shadow-md shadow-chili-950/20 active:bg-chili-700"
+            >
+              <span>{isAuthenticated ? 'Continue' : 'Sign In'}</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
       ) : null}
@@ -253,77 +643,20 @@ export default function PlanDetails() {
   )
 }
 
-function DietaryPill({ isVeg }) {
-  return (
-    <span className="flex items-center gap-1.5 rounded-full bg-cream-50/95 px-3 py-1 text-xs font-bold text-ink-900 shadow-sm backdrop-blur-md">
-      <span
-        className={`flex h-3.5 w-3.5 items-center justify-center rounded-[2px] border-[1.5px] bg-cream-50 ${
-          isVeg ? 'border-success-500' : 'border-chili-600'
-        }`}
-      >
-        <span
-          className={`h-1.5 w-1.5 rounded-full ${
-            isVeg ? 'bg-success-500' : 'bg-chili-600'
-          }`}
-        />
-      </span>
-      <span>{isVeg ? 'Pure Veg' : 'Non-Veg'}</span>
-    </span>
-  )
-}
-
-function NutritionStat({ icon: Icon, label, value, unit }) {
-  return (
-    <div className="flex flex-col items-center gap-1 rounded-2xl border border-cream-300 bg-cream-100/70 p-3 text-center shadow-2xs">
-      <Icon className="h-4 w-4 text-chili-600" />
-      <span className="font-serif text-base font-bold text-ink-900 tabular-nums">
-        {value}
-        {unit ? <span className="text-xs font-normal text-ink-500">{unit}</span> : null}
-      </span>
-      <span className="text-[10px] uppercase font-bold tracking-wider text-ink-500">{label}</span>
-    </div>
-  )
-}
-
-function ProductRow({ product }) {
-  return (
-    <li className="flex items-center gap-3.5 rounded-2xl border border-cream-300 bg-cream-50 p-4 shadow-xs transition-transform hover:-translate-y-0.5">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-chili-100 text-xs font-bold text-chili-600 border border-chili-200 tabular-nums">
-        {product.delivery_order || 1}
-      </div>
-
-      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-cream-200 border border-cream-300/60">
-        <ProductImage
-          src={product.image_url}
-          alt={product.name}
-          className="h-full w-full object-cover"
-        />
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-serif text-base font-bold text-ink-900">{product.name}</p>
-        <p className="text-xs text-ink-500 mt-0.5">
-          {product.quantity} {product.unit}
-        </p>
-      </div>
-
-      {product.nutrition?.calories ? (
-        <div className="flex shrink-0 items-center gap-1 text-xs font-bold text-amber-700 bg-amber-100/60 px-2.5 py-1 rounded-lg border border-amber-300/60">
-          <Flame className="h-3.5 w-3.5 text-amber-600" />
-          <span className="tabular-nums">{Math.round(product.nutrition.calories)} cal</span>
-        </div>
-      ) : null}
-    </li>
-  )
-}
-
 function PlanDetailsSkeleton() {
   return (
-    <div className="mt-4 animate-pulse space-y-6">
-      <div className="aspect-[16/9] w-full rounded-3xl bg-cream-200" />
-      <div className="h-6 w-1/3 rounded-lg bg-cream-200" />
-      <div className="h-10 w-2/3 rounded-lg bg-cream-200" />
-      <div className="h-28 w-full rounded-3xl bg-cream-200" />
+    <div className="animate-pulse space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="lg:col-span-7 aspect-[4/3] rounded-3xl bg-cream-200" />
+        <div className="lg:col-span-5 space-y-4">
+          <div className="h-4 w-32 rounded bg-cream-200" />
+          <div className="h-10 w-3/4 rounded-xl bg-cream-200" />
+          <div className="h-16 w-full rounded-2xl bg-cream-200" />
+          <div className="h-28 w-full rounded-2xl bg-cream-200" />
+          <div className="h-12 w-full rounded-2xl bg-cream-200" />
+        </div>
+      </div>
+      <div className="h-48 w-full rounded-3xl bg-cream-200" />
     </div>
   )
 }
