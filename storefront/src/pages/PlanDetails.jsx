@@ -614,16 +614,22 @@ export default function PlanDetails() {
       </div>
 
       {/* =========================================================================
-          5. MOBILE STICKY PURCHASE BAR (Appears on screens < lg so user never loses CTA)
+          5. MOBILE STICKY PURCHASE BAR (Floats cleanly above BottomNav on mobile)
           ========================================================================= */}
       {!isLoading && plan ? (
-        <div className="fixed inset-x-0 bottom-0 z-30 lg:hidden border-t border-cream-300 bg-cream-100/95 px-4 py-3.5 backdrop-blur-md shadow-2xl">
-          <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
-            <div>
-              <p className="text-[10px] uppercase font-bold tracking-wider text-ink-500">
-                {selectedWeeks} {selectedWeeks === 1 ? 'Week' : 'Weeks'} Plan
-              </p>
-              <p className="font-serif text-xl font-bold text-chili-600 tabular-nums leading-none mt-0.5">
+        <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] md:bottom-4 z-30 mx-auto max-w-lg px-3 lg:hidden pointer-events-none">
+          <div className="pointer-events-auto flex items-center justify-between gap-3 rounded-2xl border border-cream-300 bg-cream-50/98 p-3 shadow-xl backdrop-blur-md">
+            <div className="pl-1">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-ink-500">
+                  {selectedWeeks} {selectedWeeks === 1 ? 'Week' : 'Weeks'} Plan
+                </span>
+                <span className="text-cream-400 select-none text-[10px]">·</span>
+                <span className="text-[10px] text-ink-500 font-medium">
+                  ₹{pricePerWeek.toLocaleString('en-IN')}/wk
+                </span>
+              </div>
+              <p className="font-serif text-xl font-extrabold text-chili-600 tabular-nums leading-none mt-0.5">
                 ₹{totalPrice.toLocaleString('en-IN')}
               </p>
             </div>
@@ -631,7 +637,7 @@ export default function PlanDetails() {
             <button
               type="button"
               onClick={handleSubscribe}
-              className="button-press spring-bounce flex items-center gap-2 rounded-xl bg-chili-600 px-5 py-3 text-sm font-bold text-cream-50 shadow-md shadow-chili-950/20 active:bg-chili-700"
+              className="button-press spring-bounce flex items-center gap-2 rounded-xl bg-chili-600 px-5 py-2.5 text-sm font-bold text-cream-50 shadow-md shadow-chili-950/20 active:bg-chili-700 hover:bg-chili-500 transition-all cursor-pointer"
             >
               <span>{isAuthenticated ? 'Continue' : 'Sign In'}</span>
               <ArrowRight className="h-4 w-4" />
