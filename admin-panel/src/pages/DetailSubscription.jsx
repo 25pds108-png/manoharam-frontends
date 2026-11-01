@@ -191,6 +191,7 @@ function EditPlanModal({ open, onClose, plan, initialProducts, productsQuery, on
   )
   const [nextProductToAdd, setNextProductToAdd] = useState('')
   const [imageFile, setImageFile] = useState(null)
+  const [removeImage, setRemoveImage] = useState(false)
   const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -257,6 +258,7 @@ function EditPlanModal({ open, onClose, plan, initialProducts, productsQuery, on
           delivery_order: index + 1,
         })),
         image: imageFile || undefined,
+        removeImage: removeImage,
       })
 
       if (result.success) {
@@ -313,32 +315,75 @@ function EditPlanModal({ open, onClose, plan, initialProducts, productsQuery, on
         />
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-ink-700">Plan Image</label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-sm font-medium text-ink-700">Plan Image</label>
+            {(imageFile || (!removeImage && plan.image_url)) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setImageFile(null)
+                  setRemoveImage(true)
+                }}
+                className="text-xs font-semibold text-chili-600 hover:text-chili-700"
+              >
+                Remove image
+              </button>
+            )}
+            {removeImage && !imageFile && (
+              <button
+                type="button"
+                onClick={() => setRemoveImage(false)}
+                className="text-xs font-semibold text-forest-600 hover:text-forest-700"
+              >
+                Undo remove
+              </button>
+            )}
+          </div>
           <div className="mb-2 flex items-center gap-3">
             <div className="text-center">
               <ProductImage
-                src={imageFile ? URL.createObjectURL(imageFile) : plan.image_url}
+                src={
+                  imageFile
+                    ? URL.createObjectURL(imageFile)
+                    : removeImage
+                    ? ''
+                    : plan.image_url
+                }
                 alt={plan.name}
                 className="h-14 w-14 rounded-xl border border-cream-200 object-cover"
               />
               <span className="text-[10px] text-ink-500 font-medium block mt-1">
-                {imageFile ? 'New Preview' : 'Current'}
+                {imageFile
+                  ? 'New Preview'
+                  : removeImage
+                  ? 'No Image'
+                  : plan.image_url
+                  ? 'Current'
+                  : 'No Image'}
               </span>
             </div>
             <div className="flex-1">
               <input
                 type="file"
                 accept="image/*"
-                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null
+                  setImageFile(file)
+                  if (file) setRemoveImage(false)
+                }}
                 className="w-full text-xs text-ink-700 file:mr-3 file:rounded-xl file:border-0 file:bg-cream-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ink-700 hover:file:bg-cream-200"
               />
               {imageFile ? (
                 <p className="mt-1 text-xs text-forest-600 font-medium">
-                  ✓ Selected {imageFile.name} ({(imageFile.size / 1024).toFixed(1)} KB)
+                  ✓ Selected {imageFile.name} ({(imageFile.size / 1024).toFixed(1)} KB) · Will replace existing image
+                </p>
+              ) : removeImage ? (
+                <p className="mt-1 text-xs text-chili-600 font-medium">
+                  ✕ Plan image marked for removal on save.
                 </p>
               ) : (
                 <p className="mt-1 text-[11px] text-ink-400">
-                  Leave empty to retain current plan image.
+                  Select an image to replace, or click Remove to clear.
                 </p>
               )}
             </div>

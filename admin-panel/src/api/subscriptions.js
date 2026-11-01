@@ -132,7 +132,7 @@ export function rejectSubscription({ subscriptionId, reason }) {
  * POST /admin_routes/update_subscription_plan.php
  * Admin only. Body: multipart/form-data or JSON with id, name, category, price_per_week, description, status, products
  */
-export function updateSubscriptionPlan({ id, products, image, ...fields }) {
+export function updateSubscriptionPlan({ id, products, image, removeImage, pricePerWeek, ...fields }) {
   const formData = new FormData()
   formData.append('id', id)
 
@@ -142,12 +142,20 @@ export function updateSubscriptionPlan({ id, products, image, ...fields }) {
     }
   })
 
+  if (pricePerWeek !== undefined && pricePerWeek !== null) {
+    formData.append('price_per_week', pricePerWeek)
+  }
+
   if (products) {
     formData.append('products', JSON.stringify(products))
   }
 
   if (image) {
     formData.append('image', image)
+  }
+
+  if (removeImage) {
+    formData.append('remove_image', '1')
   }
 
   return api.post('admin_routes/update_subscription_plan.php', formData).then((res) => res.data)

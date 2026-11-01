@@ -24,6 +24,10 @@ export function resolveImageUrl(src) {
 
   // 3. Fully qualified absolute URLs
   if (/^https?:\/\//i.test(trimmed)) {
+    if (trimmed.includes('localhost/Manoharam-Real-Foods')) {
+      const suffix = trimmed.split('localhost/Manoharam-Real-Foods')[1] || ''
+      return `${BACKEND_BASE}${suffix}`
+    }
     return trimmed
   }
 

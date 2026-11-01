@@ -282,16 +282,25 @@ export default function Products() {
               className="block w-full text-sm text-ink-700 file:mr-3 file:rounded-lg file:border-0 file:bg-chili-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-chili-600 hover:file:bg-chili-100"
             />
             {imageFile ? (
-              <div className="mt-2.5 flex items-center gap-3 rounded-xl border border-cream-200 bg-cream-50 p-2">
-                <img
-                  src={URL.createObjectURL(imageFile)}
-                  alt="Selected preview"
-                  className="h-16 w-16 rounded-lg object-cover border border-cream-300"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-ink-900 truncate">{imageFile.name}</p>
-                  <p className="text-[11px] text-ink-500">{(imageFile.size / 1024).toFixed(1)} KB · Ready to upload</p>
+              <div className="mt-2.5 flex items-center justify-between gap-3 rounded-xl border border-cream-200 bg-cream-50 p-2">
+                <div className="flex items-center gap-3 min-w-0">
+                  <img
+                    src={URL.createObjectURL(imageFile)}
+                    alt="Selected preview"
+                    className="h-14 w-14 rounded-lg object-cover border border-cream-300 shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-ink-900 truncate">{imageFile.name}</p>
+                    <p className="text-[11px] text-ink-500">{(imageFile.size / 1024).toFixed(1)} KB · Ready to upload</p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setImageFile(null)}
+                  className="rounded-lg px-2.5 py-1 text-xs font-semibold text-chili-600 hover:bg-chili-50"
+                >
+                  Remove
+                </button>
               </div>
             ) : null}
           </div>

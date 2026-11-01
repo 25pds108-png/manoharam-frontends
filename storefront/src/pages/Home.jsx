@@ -23,11 +23,11 @@ import TodayDeliveryBanner from '../components/TodayDeliveryBanner'
 import { ProductCardSkeleton } from '../components/ui/Skeleton'
 import Button from '../components/ui/Button'
 import { HeritageKolamDivider } from '../components/ui/HeritagePattern'
+import ProductImage from '../components/ProductImage'
 import { listProducts, listCategories } from '../api/products'
 import { listSubscribableSalads } from '../api/subscriptions'
 import logo from '../assets/logo.png'
 import heroBanner from '../assets/food/hero-banner.jpg'
-import campaignThali from '../assets/food/campaign-thali.jpg'
 import WelcomeModal from '../components/WelcomeModal'
 
 export default function Home() {
@@ -104,6 +104,12 @@ export default function Home() {
     if (!activePlans.length) return 310
     const prices = activePlans.map((p) => Number(p.price_per_week || 0)).filter((pr) => pr > 0)
     return prices.length ? Math.min(...prices) : 310
+  }, [activePlans])
+
+  // Dynamic image delivered by backend subscription plans for promotional campaign banner
+  const subscriptionBannerImage = useMemo(() => {
+    const planWithImage = activePlans.find((p) => Boolean(p.image_url))
+    return planWithImage?.image_url || activePlans[0]?.image_url || ''
   }, [activePlans])
 
   // Smooth category transition handler
@@ -323,9 +329,10 @@ export default function Home() {
 
               {/* Right Column (7 Cols on desktop): Dominant Culinary Campaign Photography */}
               <div className="lg:col-span-7 order-1 lg:order-2 relative min-h-[300px] sm:min-h-[360px] lg:min-h-[440px] overflow-hidden">
-                <img
-                  src={campaignThali}
-                  alt="Lavish South Indian homestyle lunch feast served on fresh banana leaf"
+                <ProductImage
+                  src={subscriptionBannerImage}
+                  alt="Weekly Meal Subscription — Fresh South Indian Homestyle Feast"
+                  category="Subscription Meal"
                   className="h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
                   loading="lazy"
                 />

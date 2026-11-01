@@ -26,6 +26,7 @@ export default function ProductDetail() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [form, setForm] = useState({})
   const [imageFile, setImageFile] = useState(null)
+  const [removeImage, setRemoveImage] = useState(false)
   const [error, setError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -44,6 +45,7 @@ export default function ProductDetail() {
       is_subscription_only: Boolean(product.is_subscription_only || product.subscription_only),
     })
     setImageFile(null)
+    setRemoveImage(false)
     setError(null)
     setEditOpen(true)
   }
@@ -63,6 +65,7 @@ export default function ProductDetail() {
         selling_price: form.is_subscription_only ? Number(form.selling_price || 0) : Number(form.selling_price),
         isSubscriptionOnly: form.is_subscription_only,
         image: imageFile,
+        removeImage: removeImage,
       })
 
       if (res.success) {
@@ -317,32 +320,75 @@ export default function ProductDetail() {
           />
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-ink-700">Product Image</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-sm font-medium text-ink-700">Product Image</label>
+              {(imageFile || (!removeImage && product.image_url)) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImageFile(null)
+                    setRemoveImage(true)
+                  }}
+                  className="text-xs font-semibold text-chili-600 hover:text-chili-700"
+                >
+                  Remove image
+                </button>
+              )}
+              {removeImage && !imageFile && (
+                <button
+                  type="button"
+                  onClick={() => setRemoveImage(false)}
+                  className="text-xs font-semibold text-forest-600 hover:text-forest-700"
+                >
+                  Undo remove
+                </button>
+              )}
+            </div>
             <div className="mb-2 flex items-center gap-3">
               <div className="text-center">
                 <ProductImage
-                  src={imageFile ? URL.createObjectURL(imageFile) : product.image_url}
+                  src={
+                    imageFile
+                      ? URL.createObjectURL(imageFile)
+                      : removeImage
+                      ? ''
+                      : product.image_url
+                  }
                   alt={product.name}
                   className="h-16 w-16 rounded-xl border border-cream-200 object-cover"
                 />
                 <span className="text-[10px] text-ink-500 font-medium block mt-1">
-                  {imageFile ? 'New Preview' : 'Current Image'}
+                  {imageFile
+                    ? 'New Preview'
+                    : removeImage
+                    ? 'No Image'
+                    : product.image_url
+                    ? 'Current Image'
+                    : 'No Image'}
                 </span>
               </div>
               <div className="flex-1">
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null
+                    setImageFile(file)
+                    if (file) setRemoveImage(false)
+                  }}
                   className="w-full text-xs text-ink-500 file:mr-3 file:rounded-pill file:border-0 file:bg-cream-200 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ink-700 hover:file:bg-cream-300"
                 />
                 {imageFile ? (
                   <p className="mt-1 text-xs text-forest-600 font-medium">
-                    ✓ Selected {imageFile.name} ({(imageFile.size / 1024).toFixed(1)} KB)
+                    ✓ Selected {imageFile.name} ({(imageFile.size / 1024).toFixed(1)} KB) · Will replace existing image
+                  </p>
+                ) : removeImage ? (
+                  <p className="mt-1 text-xs text-chili-600 font-medium">
+                    ✕ Image marked for removal on save.
                   </p>
                 ) : (
                   <p className="mt-1 text-[11px] text-ink-400">
-                    Leave empty to keep existing backend image.
+                    Choose an image to replace, or click Remove to clear.
                   </p>
                 )}
               </div>

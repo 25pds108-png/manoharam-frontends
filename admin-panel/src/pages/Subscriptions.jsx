@@ -457,16 +457,25 @@ function CreatePlanModal({ open, onClose, onCreated, productsQuery }) {
               className="w-full text-xs text-ink-700 file:mr-2 file:rounded-xl file:border-0 file:bg-cream-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-ink-700 hover:file:bg-cream-200"
             />
             {imageFile ? (
-              <div className="mt-2 flex items-center gap-2 rounded-xl border border-cream-200 bg-cream-50 p-2">
-                <img
-                  src={URL.createObjectURL(imageFile)}
-                  alt="Plan preview"
-                  className="h-12 w-12 rounded-lg object-cover border border-cream-300"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-ink-900 truncate">{imageFile.name}</p>
-                  <p className="text-[10px] text-ink-500">{(imageFile.size / 1024).toFixed(1)} KB · Ready to upload</p>
+              <div className="mt-2 flex items-center justify-between gap-2 rounded-xl border border-cream-200 bg-cream-50 p-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <img
+                    src={URL.createObjectURL(imageFile)}
+                    alt="Plan preview"
+                    className="h-12 w-12 rounded-lg object-cover border border-cream-300 shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-ink-900 truncate">{imageFile.name}</p>
+                    <p className="text-[10px] text-ink-500">{(imageFile.size / 1024).toFixed(1)} KB · Ready to upload</p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setImageFile(null)}
+                  className="rounded-lg px-2 py-1 text-xs font-semibold text-chili-600 hover:bg-chili-50"
+                >
+                  Remove
+                </button>
               </div>
             ) : null}
           </div>

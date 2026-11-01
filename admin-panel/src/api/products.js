@@ -82,8 +82,8 @@ export function getProductDetails(id) {
  * Admin only. Accepts FormData (for image file) or JSON.
  * Fields: id, name, category, quantity, unit, selling_price, description, status, image, is_subscription_only
  */
-export function updateProduct({ image, imageUrl, isSubscriptionOnly, ...fields }) {
-  if (image) {
+export function updateProduct({ image, imageUrl, removeImage, isSubscriptionOnly, ...fields }) {
+  if (image || removeImage) {
     const formData = new FormData()
     Object.entries(fields).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -93,7 +93,12 @@ export function updateProduct({ image, imageUrl, isSubscriptionOnly, ...fields }
     if (isSubscriptionOnly !== undefined) {
       formData.append('is_subscription_only', isSubscriptionOnly ? '1' : '0')
     }
-    formData.append('image', image)
+    if (image) {
+      formData.append('image', image)
+    }
+    if (removeImage) {
+      formData.append('remove_image', '1')
+    }
     return api.post('admin_routes/update_product.php', formData).then((res) => res.data)
   }
 
@@ -101,6 +106,7 @@ export function updateProduct({ image, imageUrl, isSubscriptionOnly, ...fields }
     .post('admin_routes/update_product.php', {
       ...fields,
       image_url: imageUrl,
+      remove_image: removeImage ? 1 : undefined,
       is_subscription_only: isSubscriptionOnly !== undefined ? (isSubscriptionOnly ? 1 : 0) : undefined,
     })
     .then((res) => res.data)
