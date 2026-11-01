@@ -173,7 +173,7 @@ function PlansTab({ query }) {
             <Link key={plan.id} to={`/subscriptions/plans/${plan.id}`}>
               <Card className="overflow-hidden transition-shadow hover:shadow-md hover:shadow-ink-900/10">
                 <ProductImage
-                  src={plan.image_url}
+                  src={plan.image_url || plan.products?.[0]?.image_url}
                   alt={plan.name}
                   category={plan.category}
                   className="h-32 w-full object-cover"
