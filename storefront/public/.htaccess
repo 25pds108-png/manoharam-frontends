@@ -1,0 +1,16 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Do NOT rewrite /admin or /api requests - let Apache pass through directly to their respective subfolders
+  RewriteRule ^admin($|/) - [L]
+  RewriteRule ^api($|/) - [L]
+
+  # If an existing file or directory is requested, serve it directly
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Fallback to storefront index.html for client-side routing
+  RewriteRule ^ index.html [L]
+</IfModule>
