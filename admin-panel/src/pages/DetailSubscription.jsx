@@ -69,8 +69,8 @@ export default function DetailSubscription() {
         <ChevronLeft className="h-4 w-4" /> Back to subscriptions
       </button>
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
           <Card className="p-5">
             <ProductImage
               src={plan.image_url}

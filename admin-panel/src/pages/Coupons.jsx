@@ -20,6 +20,7 @@ import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
 import { listCoupons, createCoupon, updateCoupon, deleteCoupon } from '../api/coupons'
 
 const initialForm = {
@@ -212,10 +213,10 @@ export default function Coupons() {
     }
   }
 
+  const [deleteTarget, setDeleteTarget] = useState(null)
+
   const handleDelete = (c) => {
-    if (window.confirm(`Are you sure you want to delete coupon code "${c.code}"?`)) {
-      deleteMutation.mutate(c.id)
-    }
+    setDeleteTarget(c)
   }
 
   // Simulation calculation for the live preview card
@@ -240,116 +241,195 @@ export default function Coupons() {
 
   return (
     <DashboardShell>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <PageHeader
-          title="Promo Codes & Coupons"
-          description="Create attractive discounts, set spending requirements, and boost customer orders."
-        />
-        <Button onClick={openCreateModal} className="shrink-0 shadow-sm">
-          <Plus className="h-4 w-4" /> Create Coupon
-        </Button>
-      </div>
+      <PageHeader
+        title="Promo Codes & Coupons"
+        description="Create attractive percentage or flat discounts, set spending requirements, and boost customer orders."
+        action={
+          <Button onClick={openCreateModal} className="text-xs sm:text-sm">
+            <Plus className="h-4 w-4" />
+            <span>Create Coupon</span>
+          </Button>
+        }
+      />
 
       <Card className="overflow-hidden">
         {isLoading ? (
-          <p className="py-12 text-center text-sm text-ink-300">Loading coupons…</p>
+          <p className="py-12 text-center text-xs text-ink-300">Loading coupons…</p>
         ) : isError ? (
-          <p className="py-12 text-center text-sm text-chili-500">
+          <p className="py-12 text-center text-xs text-chili-500">
             Error loading coupons: {error?.message || 'Failed to fetch'}
           </p>
         ) : coupons.length === 0 ? (
           <div className="py-16 text-center">
             <Ticket className="mx-auto h-10 w-10 text-ink-300" />
-            <p className="mt-2 text-sm font-medium text-ink-900">No promo codes active</p>
-            <p className="text-xs text-ink-400">Click "Create Coupon" above to set up your first customer discount.</p>
+            <p className="mt-2 text-sm font-bold text-ink-900">No promo codes active</p>
+            <p className="text-xs text-ink-500 mt-0.5">Click "Create Coupon" above to set up your first customer discount.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-cream-200 bg-cream-50/50 text-xs font-semibold uppercase tracking-wider text-ink-500">
-                <tr>
-                  <th className="py-3 px-4">Coupon Code</th>
-                  <th className="py-3 px-4">Discount</th>
-                  <th className="py-3 px-4">Min Spend / Max Cap</th>
-                  <th className="py-3 px-4">Validity</th>
-                  <th className="py-3 px-4 text-center">Redemptions</th>
-                  <th className="py-3 px-4 text-center">Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-cream-100 text-xs">
-                {coupons.map((c) => {
-                  const isPercentage = c.discount_type === 'PERCENTAGE'
-                  const statusTone = c.status === 'ACTIVE' ? 'forest' : 'neutral'
-                  return (
-                    <tr key={c.id} className="hover:bg-cream-50/70 transition-colors">
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold tracking-wider text-chili-600 bg-chili-50 px-2 py-0.5 rounded-lg border border-chili-200">
-                            {c.code}
+          <>
+            {/* Desktop Table View (>= 768px) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-cream-200 bg-cream-50/70 text-xs font-bold uppercase tracking-wider text-ink-500">
+                  <tr>
+                    <th className="py-3.5 px-5">Coupon Code</th>
+                    <th className="py-3.5 px-4">Discount</th>
+                    <th className="py-3.5 px-4">Min Spend / Max Cap</th>
+                    <th className="py-3.5 px-4">Validity</th>
+                    <th className="py-3.5 px-4 text-center">Redemptions</th>
+                    <th className="py-3.5 px-4 text-center">Status</th>
+                    <th className="py-3.5 px-5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-cream-100 text-xs">
+                  {coupons.map((c) => {
+                    const isPercentage = c.discount_type === 'PERCENTAGE'
+                    const statusTone = c.status === 'ACTIVE' ? 'success' : 'neutral'
+                    return (
+                      <tr key={c.id} className="hover:bg-cream-50/70 transition-colors">
+                        <td className="py-3.5 px-5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold tracking-wider text-chili-600 bg-chili-50 px-2 py-0.5 rounded-lg border border-chili-200">
+                              {c.code}
+                            </span>
+                          </div>
+                          {c.description ? (
+                            <p className="text-[11px] text-ink-500 mt-1 max-w-xs truncate">{c.description}</p>
+                          ) : null}
+                        </td>
+                        <td className="py-3.5 px-4 font-bold text-ink-950">
+                          {isPercentage ? `${Number(c.discount_value)}% OFF` : `₹${Number(c.discount_value)} OFF`}
+                        </td>
+                        <td className="py-3.5 px-4 text-ink-700">
+                          <p className="font-medium">Min order: ₹{Number(c.min_order_amount || 0).toFixed(0)}</p>
+                          {c.max_discount_amount ? (
+                            <p className="text-ink-400 text-[11px]">Max cap: ₹{Number(c.max_discount_amount).toFixed(0)}</p>
+                          ) : (
+                            <p className="text-ink-300 text-[11px]">No max cap</p>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-ink-700">
+                          {c.start_date || c.end_date ? (
+                            <>
+                              <p className="font-medium">{c.start_date || 'Started'}</p>
+                              <p className="text-ink-400 text-[11px]">until {c.end_date || 'No expiry'}</p>
+                            </>
+                          ) : (
+                            <span className="text-ink-400">Always active</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <span className="font-bold text-ink-900">
+                            {c.used_count ?? 0}
                           </span>
-                        </div>
-                        {c.description ? (
-                          <p className="text-[11px] text-ink-400 mt-1 max-w-xs truncate">{c.description}</p>
-                        ) : null}
-                      </td>
-                      <td className="py-3 px-4 font-semibold text-ink-900">
-                        {isPercentage ? `${Number(c.discount_value)}% OFF` : `₹${Number(c.discount_value)} OFF`}
-                      </td>
-                      <td className="py-3 px-4 text-ink-600">
-                        <p>Min order: ₹{Number(c.min_order_amount || 0).toFixed(0)}</p>
-                        {c.max_discount_amount ? (
-                          <p className="text-ink-400 text-[11px]">Max discount: ₹{Number(c.max_discount_amount).toFixed(0)}</p>
-                        ) : (
-                          <p className="text-ink-300 text-[11px]">No max cap</p>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-ink-600">
-                        {c.start_date || c.end_date ? (
-                          <>
-                            <p>{c.start_date || 'Started'}</p>
-                            <p className="text-ink-400 text-[11px]">until {c.end_date || 'No expiry'}</p>
-                          </>
-                        ) : (
-                          <span className="text-ink-400">Always active</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <span className="font-medium text-ink-800">
-                          {c.used_count ?? 0}
+                          <span className="text-ink-400"> / {c.usage_limit ? c.usage_limit : '∞'}</span>
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <Badge tone={statusTone}>{c.status}</Badge>
+                        </td>
+                        <td className="py-3.5 px-5 text-right">
+                          <div className="inline-flex items-center gap-1">
+                            <button
+                              onClick={() => openEditModal(c)}
+                              className="p-1.5 text-ink-500 hover:text-ink-900 hover:bg-cream-100 rounded-lg transition-colors"
+                              title="Edit Coupon"
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(c)}
+                              disabled={deleteMutation.isLoading}
+                              className="p-1.5 text-ink-400 hover:text-chili-600 hover:bg-chili-50 rounded-lg transition-colors disabled:opacity-50"
+                              title="Delete Coupon"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards View (< 768px) */}
+            <div className="md:hidden divide-y divide-cream-100">
+              {coupons.map((c) => {
+                const isPercentage = c.discount_type === 'PERCENTAGE'
+                const statusTone = c.status === 'ACTIVE' ? 'success' : 'neutral'
+                return (
+                  <div key={c.id} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span className="font-mono font-bold tracking-wider text-chili-600 bg-chili-50 px-2 py-0.5 rounded-lg border border-chili-200 text-xs">
+                          {c.code}
                         </span>
-                        <span className="text-ink-400"> / {c.usage_limit ? c.usage_limit : '∞'}</span>
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <Badge tone={statusTone}>{c.status}</Badge>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <div className="inline-flex items-center gap-1">
-                          <button
-                            onClick={() => openEditModal(c)}
-                            className="p-1.5 text-ink-500 hover:text-ink-900 hover:bg-cream-200 rounded-lg"
-                            title="Edit Coupon"
-                          >
-                            <Edit2 className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(c)}
-                            disabled={deleteMutation.isLoading}
-                            className="p-1.5 text-ink-500 hover:text-chili-600 hover:bg-chili-50 rounded-lg disabled:opacity-50"
-                            title="Delete Coupon"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                        <p className="font-bold text-ink-950 text-sm mt-1">
+                          {isPercentage ? `${Number(c.discount_value)}% OFF` : `₹${Number(c.discount_value)} FLAT OFF`}
+                        </p>
+                      </div>
+                      <Badge tone={statusTone}>{c.status}</Badge>
+                    </div>
+
+                    {c.description ? (
+                      <p className="text-xs text-ink-500 leading-normal">{c.description}</p>
+                    ) : null}
+
+                    <div className="grid grid-cols-2 gap-2 text-xs text-ink-600 bg-cream-50/70 p-2.5 rounded-xl border border-cream-200">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-ink-400 block">Min Spend</span>
+                        <span className="font-semibold text-ink-900">₹{Number(c.min_order_amount || 0).toFixed(0)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-ink-400 block">Redemptions</span>
+                        <span className="font-semibold text-ink-900">{c.used_count ?? 0} / {c.usage_limit || '∞'}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex items-center justify-end gap-2 border-t border-cream-100">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => openEditModal(c)}
+                        className="text-xs"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                        <span>Edit</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDelete(c)}
+                        className="text-xs text-chili-600 hover:bg-chili-50"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span>Delete</span>
+                      </Button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
         )}
       </Card>
+
+      {/* CONFIRM DELETE COUPON DIALOG */}
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete Coupon Offer?"
+        description={`Are you sure you want to delete promo code "${deleteTarget?.code}"? Customers will no longer be able to apply this discount.`}
+        confirmLabel="Yes, Delete Coupon"
+        isLoading={deleteMutation.isLoading}
+        onConfirm={async () => {
+          if (deleteTarget) {
+            await deleteMutation.mutateAsync(deleteTarget.id)
+            setDeleteTarget(null)
+          }
+        }}
+      />
 
       {/* Upgraded, User-Friendly Create / Edit Coupon Modal */}
       <Modal

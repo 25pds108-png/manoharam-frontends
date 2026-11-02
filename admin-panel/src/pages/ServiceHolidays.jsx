@@ -17,6 +17,7 @@ import PageHeader from '../components/layout/PageHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
 import {
   listAdminServiceHolidays,
   addServiceHoliday,
@@ -86,6 +87,7 @@ export default function ServiceHolidays() {
   const [reason, setReason] = useState('Diwali Festival - Kitchen Closed')
   const [formError, setFormError] = useState(null)
   const [actionNotice, setActionNotice] = useState(null)
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, holiday: null })
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['admin', 'holidays', month],
@@ -111,6 +113,7 @@ export default function ServiceHolidays() {
     mutationFn: deleteServiceHoliday,
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'holidays'] })
+      setDeleteDialog({ open: false, holiday: null })
       setActionNotice(
         `Service holiday for ${res.holiday_date} removed. ${res.subscriptions_resumed ?? 0} subscriber delivery dates restored.`
       )
@@ -157,14 +160,13 @@ export default function ServiceHolidays() {
     addMutation.mutate(payload)
   }
 
-  const handleDelete = (h) => {
-    if (
-      window.confirm(
-        `Are you sure you want to remove the service holiday for ${h.holiday_date}? Scheduled deliveries for active subscribers will resume.`
-      )
-    ) {
-      deleteMutation.mutate(h.holiday_date)
-    }
+  const promptDelete = (h) => {
+    setDeleteDialog({ open: true, holiday: h })
+  }
+
+  const executeDelete = () => {
+    if (!deleteDialog.holiday) return
+    deleteMutation.mutate(deleteDialog.holiday.holiday_date)
   }
 
   const holidays = data?.holidays ?? []
@@ -278,54 +280,89 @@ export default function ServiceHolidays() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-cream-200 bg-cream-50/50 text-xs font-semibold uppercase tracking-wider text-ink-500">
-                <tr>
-                  <th className="py-3 px-4">Closure Date</th>
-                  <th className="py-3 px-4">Occasion / Reason</th>
-                  <th className="py-3 px-4">Scheduled By</th>
-                  <th className="py-3 px-4 text-center">Subscribers Skipped</th>
-                  <th className="py-3 px-4 text-right">Refund Credited</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-cream-100 text-xs">
-                {holidays.map((h) => (
-                  <tr key={h.id} className="hover:bg-cream-50/70 transition-colors">
-                    <td className="py-3 px-4">
-                      <p className="font-semibold text-ink-900 font-mono text-xs">
-                        {h.holiday_date}
-                      </p>
-                      <p className="text-[11px] text-ink-400">
-                        {formatDateFriendly(h.holiday_date)}
-                      </p>
-                    </td>
-                    <td className="py-3 px-4 font-medium text-ink-800">{h.reason}</td>
-                    <td className="py-3 px-4 text-ink-500">{h.created_by_admin || 'Admin'}</td>
-                    <td className="py-3 px-4 text-center">
-                      <span className="inline-flex items-center rounded-pill bg-forest-50 border border-forest-200 px-2.5 py-0.5 font-bold text-forest-700">
-                        {h.total_subscriptions_skipped} active
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-right font-bold text-forest-700">
-                      ₹{Number(h.total_refund_amount || 0).toFixed(2)}
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => handleDelete(h)}
-                        disabled={deleteMutation.isLoading}
-                        className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold text-chili-600 hover:bg-chili-50 disabled:opacity-50"
-                        title="Resume Deliveries for this Date"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Resume Service
-                      </button>
-                    </td>
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-cream-200 bg-cream-50/50 text-xs font-semibold uppercase tracking-wider text-ink-500">
+                  <tr>
+                    <th className="py-3 px-4">Closure Date</th>
+                    <th className="py-3 px-4">Occasion / Reason</th>
+                    <th className="py-3 px-4">Scheduled By</th>
+                    <th className="py-3 px-4 text-center">Subscribers Skipped</th>
+                    <th className="py-3 px-4 text-right">Refund Credited</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-cream-100 text-xs">
+                  {holidays.map((h) => (
+                    <tr key={h.id} className="hover:bg-cream-50/70 transition-colors">
+                      <td className="py-3 px-4">
+                        <p className="font-semibold text-ink-900 font-mono text-xs">
+                          {h.holiday_date}
+                        </p>
+                        <p className="text-[11px] text-ink-400">
+                          {formatDateFriendly(h.holiday_date)}
+                        </p>
+                      </td>
+                      <td className="py-3 px-4 font-medium text-ink-800">{h.reason}</td>
+                      <td className="py-3 px-4 text-ink-500">{h.created_by_admin || 'Admin'}</td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-flex items-center rounded-pill bg-forest-50 border border-forest-200 px-2.5 py-0.5 font-bold text-forest-700">
+                          {h.total_subscriptions_skipped} active
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-bold text-forest-700">
+                        ₹{Number(h.total_refund_amount || 0).toFixed(2)}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <button
+                          onClick={() => promptDelete(h)}
+                          disabled={deleteMutation.isLoading}
+                          className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold text-chili-600 hover:bg-chili-50 disabled:opacity-50"
+                          title="Resume Deliveries for this Date"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Resume Service
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card List View */}
+            <div className="divide-y divide-cream-100 md:hidden">
+              {holidays.map((h) => (
+                <div key={h.id} className="p-4 space-y-2 text-xs">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="font-mono font-bold text-chili-600 text-sm">{h.holiday_date}</span>
+                      <p className="text-[11px] text-ink-500">{formatDateFriendly(h.holiday_date)}</p>
+                    </div>
+                    <span className="inline-flex items-center rounded-pill bg-forest-50 border border-forest-200 px-2 py-0.5 text-[10px] font-bold text-forest-700">
+                      {h.total_subscriptions_skipped} skipped
+                    </span>
+                  </div>
+
+                  <p className="font-medium text-ink-800">{h.reason}</p>
+
+                  <div className="flex items-center justify-between pt-1 border-t border-cream-100">
+                    <span className="text-forest-700 font-bold">
+                      Refunds: ₹{Number(h.total_refund_amount || 0).toFixed(0)}
+                    </span>
+                    <button
+                      onClick={() => promptDelete(h)}
+                      disabled={deleteMutation.isLoading}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-chili-600 hover:underline"
+                    >
+                      <Trash2 className="h-3 w-3" /> Resume Service
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </Card>
 
@@ -522,6 +559,18 @@ export default function ServiceHolidays() {
           </div>
         </form>
       </Modal>
+
+      {/* Confirmation Dialog for Resuming Service */}
+      <ConfirmDialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, holiday: null })}
+        onConfirm={executeDelete}
+        title="Resume Service Deliveries"
+        message={`Are you sure you want to remove the kitchen closure on ${deleteDialog.holiday?.holiday_date}? Scheduled deliveries for active subscribers will be restored for this date.`}
+        confirmText="Yes, Resume Deliveries"
+        variant="primary"
+        loading={deleteMutation.isLoading}
+      />
     </DashboardShell>
   )
 }

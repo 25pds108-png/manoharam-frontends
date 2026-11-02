@@ -1,634 +1,294 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Sparkles, Layers } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Plus, Sparkles, Search, Package, Filter } from 'lucide-react'
 import DashboardShell from '../components/layout/DashboardShell'
 import PageHeader from '../components/layout/PageHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Badge, { toneForStatus, formatStatusLabel } from '../components/ui/Badge'
-import Modal from '../components/ui/Modal'
-import Field from '../components/ui/Field'
 import ProductImage from '../components/ui/ProductImage'
+import EmptyState from '../components/ui/EmptyState'
+import CreateProductModal from '../components/products/CreateProductModal'
+import CreatePlanWizardModal from '../components/subscriptions/CreatePlanWizardModal'
 import { useCursorList } from '../hooks/useCursorList'
-import { listProducts, createProduct, listSubscriptionProducts } from '../api/products'
-import { createSubscriptionPlan } from '../api/subscriptions'
-import { getApiErrorMessage } from '../api/client'
-
-const emptyForm = {
-  name: '',
-  category: '',
-  quantity: '',
-  unit: 'g',
-  selling_price: '',
-  description: '',
-  status: 'ACTIVE',
-  is_subscription_only: false,
-}
-
-const emptySubForm = {
-  subscribable: false,
-  sub_name: '',
-  sub_category: '',
-  price_per_week: '',
-}
-
-const emptyMultiPlanForm = {
-  name: '',
-  category: '',
-  price_per_week: '',
-  description: '',
-  status: 'ACTIVE',
-}
+import { listProducts } from '../api/products'
 
 export default function Products() {
-  const { items: products, isLoading, isError, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useCursorList({ queryKey: ['products'], queryFn: listProducts, itemsKey: 'products' })
+  const {
+    items: products,
+    isLoading,
+    isError,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useCursorList({
+    queryKey: ['products'],
+    queryFn: listProducts,
+    itemsKey: 'products',
+  })
 
   const queryClient = useQueryClient()
-  const [modalOpen, setModalOpen] = useState(false)
-  const [form, setForm] = useState(emptyForm)
-  const [imageFile, setImageFile] = useState(null)
-  const [subForm, setSubForm] = useState(emptySubForm)
-  const [error, setError] = useState(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [createProductOpen, setCreateProductOpen] = useState(false)
+  const [createPlanOpen, setCreatePlanOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('ALL')
+  const [saleFilter, setSaleFilter] = useState('ALL')
 
-  const [subscriptionModalOpen, setSubscriptionModalOpen] = useState(false)
+  // Extract unique categories
+  const categories = useMemo(() => {
+    const set = new Set()
+    products.forEach((p) => {
+      if (p.category) set.add(p.category)
+    })
+    return Array.from(set)
+  }, [products])
 
-  const update = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }))
-  const updateSub = (field) => (e) =>
-    setSubForm((prev) => ({
-      ...prev,
-      [field]: e.target.type === 'checkbox' ? e.target.checked : e.target.value,
-    }))
+  // Filtered products list
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      const q = searchQuery.toLowerCase().trim()
+      const matchesSearch =
+        !q ||
+        p.name?.toLowerCase().includes(q) ||
+        p.category?.toLowerCase().includes(q) ||
+        p.description?.toLowerCase().includes(q)
 
-  const resetAndClose = () => {
-    setForm(emptyForm)
-    setImageFile(null)
-    setSubForm(emptySubForm)
-    setError(null)
-    setModalOpen(false)
-  }
+      const matchesCat = categoryFilter === 'ALL' || p.category === categoryFilter
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError(null)
+      const matchesSale =
+        saleFilter === 'ALL' ||
+        (saleFilter === 'SUBSCRIPTION_ONLY' && p.is_subscription_only) ||
+        (saleFilter === 'STOREFRONT' && !p.is_subscription_only)
 
-    if (subForm.subscribable && !subForm.sub_category) {
-      setError('Pick a category (Veg / Non-veg) for the subscription plan.')
-      return
-    }
-
-    setIsSubmitting(true)
-    try {
-      const data = await createProduct({
-        ...form,
-        quantity: Number(form.quantity),
-        selling_price: form.is_subscription_only ? Number(form.selling_price || 0) : Number(form.selling_price),
-        isSubscriptionOnly: form.is_subscription_only,
-        image: imageFile,
-      })
-
-      if (!data.success) {
-        setError(data.message || 'Could not create product')
-        setIsSubmitting(false)
-        return
-      }
-
-      // If "Make subscribable" was checked, immediately create the linked
-      // subscription plan for this brand-new product. If that second step
-      // fails, the product itself still exists — we surface the plan error
-      // separately rather than pretending the whole thing failed.
-      if (subForm.subscribable) {
-        try {
-          const planData = await createSubscriptionPlan({
-            products: [
-              { product_id: data.product_id, delivery_order: 1 },
-            ],
-            name: subForm.sub_name || `${form.name} Subscription`,
-            category: subForm.sub_category,
-            price_per_week: Number(subForm.price_per_week),
-            status: 'ACTIVE',
-          })
-
-          if (!planData.success) {
-            setError(
-              `Product created, but the subscription plan could not be added: ${planData.message}`
-            )
-            queryClient.invalidateQueries({ queryKey: ['products'] })
-            setIsSubmitting(false)
-            return
-          }
-        } catch (planErr) {
-          setError(
-            `Product created, but the subscription plan could not be added: ${getApiErrorMessage(planErr)}`
-          )
-          queryClient.invalidateQueries({ queryKey: ['products'] })
-          setIsSubmitting(false)
-          return
-        }
-      }
-
-      queryClient.invalidateQueries({ queryKey: ['products'] })
-      queryClient.invalidateQueries({ queryKey: ['subscription-plans'] })
-      resetAndClose()
-    } catch (err) {
-      setError(getApiErrorMessage(err, 'Could not create product'))
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+      return matchesSearch && matchesCat && matchesSale
+    })
+  }, [products, searchQuery, categoryFilter, saleFilter])
 
   return (
     <DashboardShell>
       <PageHeader
-        title="Products"
-        description="Salads, pickles, and masalas on the storefront menu."
+        title="Products & Grocery Catalog"
+        description="Manage handcrafted pickles, stone-ground masalas, and subscription meal delicacies."
         action={
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => setSubscriptionModalOpen(true)}>
-              <Layers className="h-4 w-4" /> Create subscription
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Button
+              variant="secondary"
+              onClick={() => setCreatePlanOpen(true)}
+              className="text-xs sm:text-sm"
+            >
+              <Sparkles className="h-4 w-4 text-chili-600" />
+              <span>Create Meal Plan</span>
             </Button>
-            <Button onClick={() => setModalOpen(true)}>
-              <Plus className="h-4 w-4" /> New product
+            <Button
+              onClick={() => setCreateProductOpen(true)}
+              className="text-xs sm:text-sm"
+            >
+              <Plus className="h-4 w-4" />
+              <span>New Product</span>
             </Button>
           </div>
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {products.map((product) => (
-          <Link key={product.id} to={`/products/${product.id}`}>
-            <Card className="overflow-hidden transition-shadow hover:shadow-md hover:shadow-ink-900/10">
-              <ProductImage src={product.image_url} alt={product.name} className="h-36 w-full" />
-              <div className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-display text-base font-semibold text-ink-900">
-                    {product.name}
-                  </h3>
-                  <div className="flex flex-col items-end gap-1">
-                    <Badge tone={toneForStatus(product.status)}>
-                      {formatStatusLabel(product.status)}
-                    </Badge>
-                    {product.is_subscription_only ? (
-                      <span className="rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
-                        Subscription Only
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-                <p className="mt-0.5 text-sm text-ink-500">{product.category || 'Uncategorised'}</p>
-                <div className="mt-3 flex items-center justify-between">
-                  <p className="font-display text-lg font-semibold text-chili-500">
-                    {Number(product.selling_price) > 0
-                      ? `₹${Number(product.selling_price).toFixed(0)}`
-                      : 'Plan-only'}
-                    <span className="ml-1 text-xs font-normal text-ink-300">/ {product.unit}</span>
-                  </p>
-                  <p className="text-xs text-ink-300">
-                    {product.quantity} {product.unit}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </Link>
-        ))}
-      </div>
-
-      {isLoading ? <p className="py-10 text-center text-ink-300">Loading…</p> : null}
-      {isError ? (
-        <p className="py-10 text-center text-chili-500">Couldn't load products.</p>
-      ) : null}
-      {!isLoading && products.length === 0 ? (
-        <Card className="p-10 text-center text-ink-300">
-          No products yet — create your first one to get started.
-        </Card>
-      ) : null}
-
-      {hasNextPage ? (
-        <div className="mt-4 text-center">
-          <Button variant="ghost" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
-            {isFetchingNextPage ? 'Loading…' : 'Load more'}
-          </Button>
-        </div>
-      ) : null}
-
-      <Modal open={modalOpen} onClose={resetAndClose} title="New product" maxWidth="max-w-xl">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Field label="Name" value={form.name} onChange={update('name')} required />
-          <Field
-            label="Category"
-            value={form.category}
-            onChange={update('category')}
-            hint="e.g. Salads, Pickles, Masalas"
-          />
-
-          <div className="grid grid-cols-2 gap-3">
-            <Field
-              label="Quantity"
-              type="number"
-              step="0.01"
-              value={form.quantity}
-              onChange={update('quantity')}
-              required
-            />
-            <Field as="select" label="Unit" value={form.unit} onChange={update('unit')}>
-              <option value="g">g</option>
-              <option value="kg">kg</option>
-            </Field>
-          </div>
-
-          <div className="rounded-2xl border border-cream-300 bg-cream-50/70 p-3.5">
-            <label className="flex items-start gap-2.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.is_subscription_only}
-                onChange={(e) => setForm((prev) => ({ ...prev, is_subscription_only: e.target.checked }))}
-                className="mt-0.5 h-4 w-4 rounded border-cream-300 text-chili-500 focus:ring-chili-400"
-              />
-              <div>
-                <span className="block text-sm font-semibold text-ink-900">
-                  Subscription-Only Product
-                </span>
-                <span className="block text-xs text-ink-500 mt-0.5">
-                  Prepares this product exclusively for subscription plans. Excluded from direct one-off customer cart orders. (Selling price is optional or can be ₹0).
-                </span>
-              </div>
-            </label>
-          </div>
-
-          <Field
-            label={`Selling price (₹)${form.is_subscription_only ? ' (Optional for subscription-only)' : ''}`}
-            type="number"
-            step="0.01"
-            value={form.selling_price}
-            onChange={update('selling_price')}
-            required={!form.is_subscription_only}
-          />
-
-          <Field as="textarea" rows={3} label="Description" value={form.description} onChange={update('description')} />
-
-          {/* create_product.php only accepts an uploaded file (it builds
-              image_url itself from $_FILES["image"]) — there's no field
-              for passing an image URL string directly. */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-ink-700">
-              Product image
-            </label>
+      {/* SEARCH & FILTERS BAR */}
+      <div className="mb-6 rounded-2xl border border-cream-200 bg-white p-3.5 sm:p-4 shadow-xs space-y-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-400" />
             <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-              className="block w-full text-sm text-ink-700 file:mr-3 file:rounded-lg file:border-0 file:bg-chili-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-chili-600 hover:file:bg-chili-100"
+              type="text"
+              placeholder="Search products by name, recipe keywords, or category..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl border border-cream-300 bg-cream-50/50 pl-10 pr-4 py-2 text-xs sm:text-sm text-ink-900 outline-none focus:border-chili-500 focus:bg-white transition-colors"
             />
-            {imageFile ? (
-              <div className="mt-2.5 flex items-center justify-between gap-3 rounded-xl border border-cream-200 bg-cream-50 p-2">
-                <div className="flex items-center gap-3 min-w-0">
-                  <img
-                    src={URL.createObjectURL(imageFile)}
-                    alt="Selected preview"
-                    className="h-14 w-14 rounded-lg object-cover border border-cream-300 shrink-0"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-ink-900 truncate">{imageFile.name}</p>
-                    <p className="text-[11px] text-ink-500">{(imageFile.size / 1024).toFixed(1)} KB · Ready to upload</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setImageFile(null)}
-                  className="rounded-lg px-2.5 py-1 text-xs font-semibold text-chili-600 hover:bg-chili-50"
-                >
-                  Remove
-                </button>
-              </div>
-            ) : null}
           </div>
 
-          <Field as="select" label="Status" value={form.status} onChange={update('status')}>
-            <option value="ACTIVE">Active</option>
-            <option value="INACTIVE">Inactive</option>
-          </Field>
-
-          {/* Subscription toggle — only meaningful for salads, but left
-              available for any product since admin discretion decides
-              what's subscribable. */}
-          <div className="rounded-2xl border border-chili-100 bg-chili-50/40 p-4">
-            <label className="flex items-center gap-2.5">
-              <input
-                type="checkbox"
-                checked={subForm.subscribable}
-                onChange={updateSub('subscribable')}
-                className="h-4 w-4 rounded border-cream-300 text-chili-500 focus:ring-chili-400"
-              />
-              <span className="flex items-center gap-1.5 text-sm font-semibold text-ink-900">
-                <Sparkles className="h-4 w-4 text-chili-500" />
-                Make this salad subscribable
-              </span>
-            </label>
-
-            {subForm.subscribable ? (
-              <div className="mt-3 space-y-3">
-                <Field
-                  label="Subscription plan name"
-                  value={subForm.sub_name}
-                  onChange={updateSub('sub_name')}
-                  placeholder={form.name ? `${form.name} Subscription` : 'e.g. Veg Salad for Fitness'}
-                />
-                <Field as="select" label="Category" value={subForm.sub_category} onChange={updateSub('sub_category')} required>
-                  <option value="">Select category…</option>
-                  <option value="VEG">Veg</option>
-                  <option value="NON_VEG">Non-veg</option>
-                </Field>
-                <Field
-                  label="Price per week (₹)"
-                  type="number"
-                  step="0.01"
-                  value={subForm.price_per_week}
-                  onChange={updateSub('price_per_week')}
-                  required
-                />
-              </div>
-            ) : null}
-          </div>
-
-          {error ? <p className="text-sm font-medium text-chili-500">{error}</p> : null}
-
-          <Button type="submit" loading={isSubmitting} className="w-full">
-            Create product
-          </Button>
-        </form>
-      </Modal>
-
-      <CreateSubscriptionModal
-        open={subscriptionModalOpen}
-        onClose={() => setSubscriptionModalOpen(false)}
-        products={products}
-        onCreated={() => {
-          queryClient.invalidateQueries({ queryKey: ['subscription-plans'] })
-        }}
-      />
-    </DashboardShell>
-  )
-}
-
-/**
- * Standalone flow for create_subscription_plan.php's real contract: pick
- * any number of EXISTING products, set their delivery order, choose a
- * category (VEG | NON_VEG — required by the backend), and create one plan
- * that rotates through them at a single weekly price. Independent of
- * product creation — this never creates a product.
- */
-function CreateSubscriptionModal({ open, onClose, onCreated, products }) {
-  const [form, setForm] = useState(emptyMultiPlanForm)
-  const [imageFile, setImageFile] = useState(null)
-  // Order of this array IS delivery_order, matching subscription_plan_products.
-  const [selectedProductIds, setSelectedProductIds] = useState([])
-  const [nextProductToAdd, setNextProductToAdd] = useState('')
-  const [error, setError] = useState(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const subProductsQuery = useQuery({
-    queryKey: ['subscription-products-catalog'],
-    queryFn: () => listSubscriptionProducts(),
-    enabled: open,
-  })
-
-  const catalogProducts = subProductsQuery.data?.products?.length
-    ? subProductsQuery.data.products
-    : products
-
-  const update = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }))
-
-  const productById = (id) => catalogProducts.find((p) => String(p.id) === String(id))
-
-  const addProduct = () => {
-    if (!nextProductToAdd) return
-    if (selectedProductIds.includes(nextProductToAdd)) {
-      setNextProductToAdd('')
-      return
-    }
-    setSelectedProductIds((prev) => [...prev, nextProductToAdd])
-    setNextProductToAdd('')
-  }
-
-  const removeProduct = (id) => {
-    setSelectedProductIds((prev) => prev.filter((p) => p !== id))
-  }
-
-  const moveProduct = (index, direction) => {
-    setSelectedProductIds((prev) => {
-      const next = [...prev]
-      const target = index + direction
-      if (target < 0 || target >= next.length) return next
-      ;[next[index], next[target]] = [next[target], next[index]]
-      return next
-    })
-  }
-
-  const resetAndClose = () => {
-    setForm(emptyMultiPlanForm)
-    setImageFile(null)
-    setSelectedProductIds([])
-    setNextProductToAdd('')
-    setError(null)
-    onClose()
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError(null)
-
-    if (selectedProductIds.length === 0) {
-      setError('Add at least one product to this plan.')
-      return
-    }
-
-    if (!form.category) {
-      setError('Pick a category (Veg / Non-veg) for this plan.')
-      return
-    }
-
-    setIsSubmitting(true)
-    try {
-      const data = await createSubscriptionPlan({
-        products: selectedProductIds.map((id, index) => ({
-          product_id: Number(id),
-          delivery_order: index + 1,
-        })),
-        name: form.name,
-        category: form.category,
-        price_per_week: Number(form.price_per_week),
-        description: form.description,
-        status: form.status,
-        image: imageFile,
-      })
-
-      if (data.success) {
-        onCreated()
-        resetAndClose()
-      } else {
-        setError(data.message || 'Could not create subscription plan')
-      }
-    } catch (err) {
-      setError(getApiErrorMessage(err, 'Could not create subscription plan'))
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const availableProducts = catalogProducts.filter((p) => !selectedProductIds.includes(String(p.id)))
-
-  return (
-    <Modal open={open} onClose={resetAndClose} title="Create subscription plan" maxWidth="max-w-xl">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-ink-700">
-            Products in this plan
-          </label>
-
-          {selectedProductIds.length > 0 ? (
-            <ul className="mb-2 space-y-1.5">
-              {selectedProductIds.map((id, index) => {
-                const product = productById(id)
-                return (
-                  <li
-                    key={id}
-                    className="flex items-center justify-between gap-2 rounded-xl border border-cream-200 bg-cream-50 px-3 py-2 text-sm"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <ProductImage
-                        src={product?.image_url}
-                        alt={product?.name}
-                        className="h-9 w-9 shrink-0 rounded-lg object-cover"
-                      />
-                      <span className="text-ink-900 font-medium truncate">
-                        {index + 1}. {product?.name || `Product #${id}`}
-                      </span>
-                    </div>
-                    <span className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => moveProduct(index, -1)}
-                        disabled={index === 0}
-                        className="rounded px-1.5 py-0.5 text-ink-500 hover:bg-cream-200 disabled:opacity-30"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => moveProduct(index, 1)}
-                        disabled={index === selectedProductIds.length - 1}
-                        className="rounded px-1.5 py-0.5 text-ink-500 hover:bg-cream-200 disabled:opacity-30"
-                      >
-                        ↓
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeProduct(id)}
-                        className="rounded px-1.5 py-0.5 text-chili-500 hover:bg-chili-50"
-                      >
-                        Remove
-                      </button>
-                    </span>
-                  </li>
-                )
-              })}
-            </ul>
-          ) : (
-            <p className="mb-2 text-sm text-ink-300">
-              No products added yet — the delivery cycle repeats in the order you add them below.
-            </p>
-          )}
-
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <select
-              value={nextProductToAdd}
-              onChange={(e) => setNextProductToAdd(e.target.value)}
-              className="flex-1 rounded-xl border border-cream-200 bg-white px-3 py-2 text-sm text-ink-900"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="rounded-xl border border-cream-300 bg-white px-3 py-2 text-xs font-semibold text-ink-700 outline-none focus:border-chili-500"
             >
-              <option value="">Select a product to add…</option>
-              {availableProducts.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
+              <option value="ALL">All Categories ({products.length})</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
                 </option>
               ))}
             </select>
-            <Button type="button" variant="ghost" onClick={addProduct} disabled={!nextProductToAdd}>
-              Add
-            </Button>
+
+            <select
+              value={saleFilter}
+              onChange={(e) => setSaleFilter(e.target.value)}
+              className="rounded-xl border border-cream-300 bg-white px-3 py-2 text-xs font-semibold text-ink-700 outline-none focus:border-chili-500"
+            >
+              <option value="ALL">All Product Types</option>
+              <option value="STOREFRONT">Storefront Retail Only</option>
+              <option value="SUBSCRIPTION_ONLY">Subscription Delicacies Only</option>
+            </select>
           </div>
         </div>
 
-        <Field
-          label="Plan name"
-          value={form.name}
-          onChange={update('name')}
-          placeholder="e.g. Fitness Combo"
-          required
-        />
-
-        <Field as="select" label="Category" value={form.category} onChange={update('category')} required>
-          <option value="">Select category…</option>
-          <option value="VEG">Veg</option>
-          <option value="NON_VEG">Non-veg</option>
-        </Field>
-
-        <Field
-          label="Price per week (₹)"
-          type="number"
-          step="0.01"
-          value={form.price_per_week}
-          onChange={update('price_per_week')}
-          required
-        />
-
-        <Field
-          as="textarea"
-          rows={3}
-          label="Description"
-          value={form.description}
-          onChange={update('description')}
-        />
-
-        {/* create_subscription_plan.php also accepts an optional image
-            file (same $_FILES["image"] contract as product creation). */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-ink-700">
-            Plan image (optional)
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-            className="block w-full text-sm text-ink-700 file:mr-3 file:rounded-lg file:border-0 file:bg-chili-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-chili-600 hover:file:bg-chili-100"
-          />
-          {imageFile ? (
-            <div className="mt-2.5 flex items-center gap-3 rounded-xl border border-cream-200 bg-cream-50 p-2">
-              <img
-                src={URL.createObjectURL(imageFile)}
-                alt="Selected plan preview"
-                className="h-16 w-16 rounded-lg object-cover border border-cream-300"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-ink-900 truncate">{imageFile.name}</p>
-                <p className="text-[11px] text-ink-500">{(imageFile.size / 1024).toFixed(1)} KB · Ready to upload</p>
-              </div>
-            </div>
+        {/* Quick Results Summary */}
+        <div className="flex items-center justify-between text-xs text-ink-500 pt-1 border-t border-cream-100">
+          <span>
+            Showing <strong className="text-ink-900 font-semibold">{filteredProducts.length}</strong> of{' '}
+            {products.length} products
+          </span>
+          {searchQuery || categoryFilter !== 'ALL' || saleFilter !== 'ALL' ? (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('')
+                setCategoryFilter('ALL')
+                setSaleFilter('ALL')
+              }}
+              className="text-xs font-bold text-chili-600 hover:underline"
+            >
+              Reset filters
+            </button>
           ) : null}
         </div>
+      </div>
 
-        <Field as="select" label="Status" value={form.status} onChange={update('status')}>
-          <option value="ACTIVE">Active</option>
-          <option value="INACTIVE">Inactive</option>
-        </Field>
+      {/* PRODUCTS GRID */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-64 rounded-2xl bg-white border border-cream-200 animate-pulse p-4 space-y-3"
+            >
+              <div className="h-32 rounded-xl bg-cream-200" />
+              <div className="h-4 w-3/4 rounded bg-cream-200" />
+              <div className="h-3 w-1/2 rounded bg-cream-100" />
+            </div>
+          ))}
+        </div>
+      ) : isError ? (
+        <Card className="p-10 text-center text-chili-600">
+          <p className="font-semibold text-sm">Could not load products.</p>
+          <p className="text-xs text-ink-500 mt-1">Check backend database and API server connectivity.</p>
+        </Card>
+      ) : filteredProducts.length === 0 ? (
+        <EmptyState
+          icon={Package}
+          title={searchQuery ? 'No products match your search' : 'No products in catalog yet'}
+          description={
+            searchQuery
+              ? 'Try modifying your search keywords or clearing active filters.'
+              : 'Add your first artisanal pickle, meal salad, or spice blend to start taking orders.'
+          }
+          actionLabel={searchQuery ? 'Clear Filters' : 'Create First Product'}
+          onAction={() => {
+            if (searchQuery) {
+              setSearchQuery('')
+              setCategoryFilter('ALL')
+              setSaleFilter('ALL')
+            } else {
+              setCreateProductOpen(true)
+            }
+          }}
+        />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+          {filteredProducts.map((product) => (
+            <Link key={product.id} to={`/products/${product.id}`} className="group">
+              <Card className="h-full flex flex-col overflow-hidden transition-all duration-200 hover:shadow-md hover:border-cream-400 group-hover:-translate-y-0.5">
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-cream-100">
+                  <ProductImage
+                    src={product.image_url}
+                    alt={product.name}
+                    category={product.category}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-103"
+                  />
+                  <div className="absolute top-2.5 right-2.5 flex flex-col items-end gap-1">
+                    <Badge tone={toneForStatus(product.status)}>
+                      {formatStatusLabel(product.status)}
+                    </Badge>
+                  </div>
 
-        {error ? <p className="text-sm font-medium text-chili-500">{error}</p> : null}
+                  {product.is_subscription_only ? (
+                    <div className="absolute bottom-2.5 left-2.5">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-amber-900/85 px-2 py-0.5 text-[10px] font-bold text-cream-50 backdrop-blur-xs shadow-xs">
+                        <Sparkles className="h-2.5 w-2.5 text-amber-300" />
+                        Subscription Dish
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
 
-        <Button type="submit" loading={isSubmitting} className="w-full">
-          Create subscription plan
-        </Button>
-      </form>
-    </Modal>
+                <div className="flex-1 p-4 flex flex-col justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-ink-400">
+                      {product.category || 'General'}
+                    </p>
+                    <h3 className="font-display text-sm font-bold text-ink-950 group-hover:text-chili-600 transition-colors line-clamp-2 mt-0.5">
+                      {product.name}
+                    </h3>
+                  </div>
+
+                  <div className="pt-2 border-t border-cream-100 flex items-baseline justify-between">
+                    <div>
+                      {Number(product.selling_price) > 0 ? (
+                        <p className="font-display text-base font-bold text-chili-600">
+                          ₹{Number(product.selling_price).toFixed(0)}
+                          <span className="text-[11px] font-normal text-ink-400 ml-0.5">
+                            / unit
+                          </span>
+                        </p>
+                      ) : (
+                        <p className="text-xs font-bold text-amber-700">
+                          Plan-Only Dish
+                        </p>
+                      )}
+                    </div>
+
+                    <span className="text-[11px] font-semibold text-ink-600 bg-cream-100 px-2 py-0.5 rounded-md">
+                      {product.quantity} {product.unit}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Pagination Load More */}
+      {hasNextPage ? (
+        <div className="mt-8 text-center">
+          <Button
+            variant="secondary"
+            onClick={() => fetchNextPage()}
+            loading={isFetchingNextPage}
+            className="min-w-[160px]"
+          >
+            Load More Products
+          </Button>
+        </div>
+      ) : null}
+
+      {/* Complete Redesigned Modals */}
+      <CreateProductModal
+        open={createProductOpen}
+        onClose={() => setCreateProductOpen(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['products'] })
+          queryClient.invalidateQueries({ queryKey: ['subscription-plans'] })
+        }}
+      />
+
+      <CreatePlanWizardModal
+        open={createPlanOpen}
+        onClose={() => setCreatePlanOpen(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['subscription-plans'] })
+          queryClient.invalidateQueries({ queryKey: ['products'] })
+        }}
+      />
+    </DashboardShell>
   )
 }

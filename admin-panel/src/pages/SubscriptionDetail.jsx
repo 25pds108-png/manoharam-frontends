@@ -125,8 +125,8 @@ export default function SubscriptionDetail() {
         <ChevronLeft className="h-4 w-4" /> Back to subscriptions
       </button>
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
           <Card className="p-5">
             <div className="flex items-center justify-between">
               <h1 className="font-display text-xl font-semibold text-ink-900">

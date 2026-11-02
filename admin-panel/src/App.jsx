@@ -18,6 +18,7 @@ import CustomerDetail from './pages/CustomerDetail'
 import Coupons from './pages/Coupons'
 import Reviews from './pages/Reviews'
 import ServiceHolidays from './pages/ServiceHolidays'
+import Ingredients from './pages/Ingredients'
 
 export default function App() {
   return (
@@ -149,6 +150,14 @@ export default function App() {
         element={
           <RequireAuth>
             <ServiceHolidays />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/ingredients"
+        element={
+          <RequireAuth>
+            <Ingredients />
           </RequireAuth>
         }
       />

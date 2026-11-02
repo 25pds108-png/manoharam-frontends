@@ -139,7 +139,7 @@ export default function Dashboard() {
         <Card className="p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-cream-100 pb-4">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-chili-50 text-chili-600">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-chili-50 text-chili-600">
                 <TrendingUp className="h-5 w-5" />
               </div>
               <div>
@@ -151,20 +151,20 @@ export default function Dashboard() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-ink-400" />
+            <div className="flex flex-wrap items-center gap-2">
+              <Calendar className="h-4 w-4 shrink-0 text-ink-400" />
               <input
                 type="date"
                 value={salesRange.startDate}
                 onChange={(e) => setSalesRange((prev) => ({ ...prev, startDate: e.target.value }))}
-                className="rounded-xl border border-cream-300 bg-white px-2.5 py-1 text-xs font-medium text-ink-900 outline-none focus:border-chili-400"
+                className="rounded-xl border border-cream-300 bg-white px-2.5 py-1.5 text-xs font-medium text-ink-900 outline-none focus:border-chili-400"
               />
-              <span className="text-xs text-ink-300">to</span>
+              <span className="text-xs text-ink-400">to</span>
               <input
                 type="date"
                 value={salesRange.endDate}
                 onChange={(e) => setSalesRange((prev) => ({ ...prev, endDate: e.target.value }))}
-                className="rounded-xl border border-cream-300 bg-white px-2.5 py-1 text-xs font-medium text-ink-900 outline-none focus:border-chili-400"
+                className="rounded-xl border border-cream-300 bg-white px-2.5 py-1.5 text-xs font-medium text-ink-900 outline-none focus:border-chili-400"
               />
             </div>
           </div>
@@ -201,7 +201,9 @@ export default function Dashboard() {
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-500">
                     Top Selling Products
                   </h3>
-                  <div className="mt-3 overflow-x-auto">
+
+                  {/* Desktop Table */}
+                  <div className="mt-3 hidden overflow-x-auto md:block">
                     <table className="w-full text-left text-sm">
                       <thead className="border-b border-cream-200 text-xs font-medium text-ink-500">
                         <tr>
@@ -226,6 +228,24 @@ export default function Dashboard() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+
+                  {/* Mobile Card List */}
+                  <div className="mt-3 space-y-2.5 md:hidden">
+                    {salesData.top_selling_products.map((p) => (
+                      <div
+                        key={p.id}
+                        className="flex items-center justify-between rounded-xl border border-cream-200 bg-cream-50/50 p-3"
+                      >
+                        <div className="min-w-0 flex-1 pr-3">
+                          <p className="truncate text-xs font-semibold text-ink-900">{p.name}</p>
+                          <p className="text-[11px] text-ink-500">{p.category} · {Number(p.total_quantity_sold)} units sold</p>
+                        </div>
+                        <span className="shrink-0 text-xs font-bold text-chili-600">
+                          ₹{Number(p.total_product_revenue).toFixed(2)}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ) : null}
@@ -312,7 +332,9 @@ export default function Dashboard() {
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-ink-500 flex items-center gap-1.5">
                     <Truck className="h-3.5 w-3.5 text-ink-500" /> Deliveries to Dispatch ({dispatchData.deliveries.length})
                   </h3>
-                  <div className="mt-3 overflow-x-auto">
+
+                  {/* Desktop Table */}
+                  <div className="mt-3 hidden overflow-x-auto md:block">
                     <table className="w-full text-left text-sm">
                       <thead className="border-b border-cream-200 text-xs font-medium text-ink-500">
                         <tr>
@@ -363,6 +385,45 @@ export default function Dashboard() {
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Mobile Dispatch Card List */}
+                  <div className="mt-3 space-y-3 md:hidden">
+                    {dispatchData.deliveries.map((del) => (
+                      <div
+                        key={del.subscription_id}
+                        className="rounded-xl border border-cream-200 bg-cream-50/50 p-3.5 space-y-2 text-xs"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-ink-900">{del.customer_name}</span>
+                          <Link
+                            to={`/subscriptions/${del.subscription_id}`}
+                            className="font-semibold text-chili-500 hover:underline"
+                          >
+                            Sub #{del.subscription_id}
+                          </Link>
+                        </div>
+                        <div className="flex items-center gap-2 text-ink-800">
+                          {del.scheduled_product && (
+                            <ProductImage
+                              src={del.scheduled_product.image_url}
+                              alt={del.scheduled_product.name}
+                              category="Salads"
+                              className="h-8 w-8 shrink-0 rounded-lg"
+                            />
+                          )}
+                          <span className="font-medium">
+                            {del.scheduled_product
+                              ? `${del.scheduled_product.name} (${del.scheduled_product.quantity} ${del.scheduled_product.unit})`
+                              : del.plan_name}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-ink-500">
+                          <p>Phone: {del.customer_phone || '—'}</p>
+                          <p className="line-clamp-2 mt-0.5">Addr: {del.delivery_address || '—'}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : null}
             </div>
@@ -393,17 +454,17 @@ export default function Dashboard() {
               <Link
                 key={order.id}
                 to={`/orders/${order.id}`}
-                className="flex items-center justify-between rounded-xl px-3 py-2.5 hover:bg-cream-100"
+                className="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 hover:bg-cream-100"
               >
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-warning-500" />
-                  <span className="text-sm text-ink-900">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-warning-500" />
+                  <span className="truncate text-xs sm:text-sm text-ink-900">
                     Order #{order.id} — {order.customer_name}
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex shrink-0 items-center gap-2.5">
                   <Badge tone={toneForStatus(order.status)}>{formatStatusLabel(order.status)}</Badge>
-                  <span className="text-sm font-semibold text-ink-900">
+                  <span className="text-xs sm:text-sm font-semibold text-ink-900">
                     ₹{Number(order.total_amount).toFixed(0)}
                   </span>
                 </div>
@@ -435,15 +496,17 @@ export default function Dashboard() {
               <Link
                 key={sub.id}
                 to={`/subscriptions/${sub.id}`}
-                className="flex items-center justify-between rounded-xl px-3 py-2.5 hover:bg-cream-100"
+                className="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 hover:bg-cream-100"
               >
-                <div className="flex items-center gap-2">
-                  <CalendarCheck className="h-4 w-4 text-forest-500" />
-                  <span className="text-sm text-ink-900">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <CalendarCheck className="h-4 w-4 shrink-0 text-forest-500" />
+                  <span className="truncate text-xs sm:text-sm text-ink-900">
                     {sub.customer_name} — {sub.plan_name}
                   </span>
                 </div>
-                <Badge tone={toneForStatus(sub.status)}>{formatStatusLabel(sub.status)}</Badge>
+                <Badge tone={toneForStatus(sub.status)} className="shrink-0">
+                  {formatStatusLabel(sub.status)}
+                </Badge>
               </Link>
             ))}
           </div>

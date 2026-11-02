@@ -1,16 +1,20 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Star, MessageSquare, X } from 'lucide-react'
+import { Star, MessageSquare, X, CheckCircle2, Filter } from 'lucide-react'
 import DashboardShell from '../components/layout/DashboardShell'
 import PageHeader from '../components/layout/PageHeader'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
+import EmptyState from '../components/ui/EmptyState'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
 import { listProducts } from '../api/products'
 import { getProductReviews, moderateReview } from '../api/reviews'
 
 export default function Reviews() {
   const queryClient = useQueryClient()
   const [selectedProductId, setSelectedProductId] = useState(null)
+  const [rejectDialog, setRejectDialog] = useState({ open: false, reviewId: null })
+  const [actionNotice, setActionNotice] = useState('')
 
   // 1. Fetch products list so admin can select which product's reviews to inspect/moderate
   const productsQuery = useQuery({
@@ -35,19 +39,21 @@ export default function Reviews() {
     mutationFn: moderateReview,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'product-reviews', selectedProductId] })
+      setRejectDialog({ open: false, reviewId: null })
+      setActionNotice('Review status updated successfully.')
+      setTimeout(() => setActionNotice(''), 3500)
     },
   })
 
-  const handleModerate = (reviewId, status) => {
-    const action = status === 'APPROVED' ? 'approve' : 'reject'
-    if (window.confirm(`Are you sure you want to ${action} this review?`)) {
-      moderateMutation.mutate({ reviewId, status })
-    }
+  const confirmReject = () => {
+    if (!rejectDialog.reviewId) return
+    moderateMutation.mutate({ reviewId: rejectDialog.reviewId, status: 'REJECTED' })
   }
 
   const products = productsQuery.data?.products ?? []
   const reviewsData = reviewsQuery.data
   const reviews = reviewsData?.reviews ?? []
+  const selectedProduct = products.find((p) => p.id === selectedProductId)
 
   return (
     <DashboardShell>
@@ -56,11 +62,36 @@ export default function Reviews() {
         description="Inspect customer ratings, review comments, and approve or reject feedback before public display."
       />
 
+      {actionNotice ? (
+        <div className="mb-6 flex items-center gap-2 rounded-xl bg-forest-50 p-3.5 text-xs font-semibold text-forest-800 border border-forest-200">
+          <CheckCircle2 className="h-4 w-4 text-forest-600 shrink-0" />
+          <span>{actionNotice}</span>
+        </div>
+      ) : null}
+
+      {/* Mobile-Friendly Product Selector (< lg) */}
+      <div className="mb-4 block lg:hidden">
+        <label className="mb-1.5 block text-xs font-semibold text-ink-700">
+          Select Product to Moderate:
+        </label>
+        <select
+          value={selectedProductId || ''}
+          onChange={(e) => setSelectedProductId(Number(e.target.value))}
+          className="w-full rounded-xl border border-cream-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-ink-900 outline-none focus:border-chili-400 shadow-2xs"
+        >
+          {products.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name} ({p.category})
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Product Selection Sidebar */}
-        <Card className="p-4 lg:col-span-1 max-h-[80vh] overflow-y-auto">
+        {/* Product Selection Desktop Sidebar (lg+) */}
+        <Card className="hidden lg:block p-4 lg:col-span-1 max-h-[80vh] overflow-y-auto">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-ink-500 mb-3">
-            Select Product ({products.length})
+            Products ({products.length})
           </h2>
           {productsQuery.isLoading ? (
             <p className="text-xs text-ink-300 py-4 text-center">Loading products…</p>
@@ -95,7 +126,7 @@ export default function Reviews() {
             </Card>
           ) : !selectedProductId ? (
             <Card className="p-12 text-center text-sm text-ink-400">
-              Please select a product on the left to inspect customer reviews.
+              Please select a product above to inspect customer reviews.
             </Card>
           ) : (
             <>
@@ -104,14 +135,14 @@ export default function Reviews() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
                     <h2 className="font-display text-lg font-bold text-ink-900">
-                      {products.find((p) => p.id === selectedProductId)?.name || 'Selected Product'}
+                      {selectedProduct?.name || 'Selected Product'}
                     </h2>
                     <p className="text-xs text-ink-400 mt-0.5">
-                      Customer satisfaction and verified feedback
+                      {selectedProduct?.category} · Verified customer feedback
                     </p>
                   </div>
-                  <div className="flex items-center gap-3 bg-cream-50 px-4 py-2 rounded-xl border border-cream-200">
-                    <div className="flex items-center gap-1 text-warning-500">
+                  <div className="flex items-center gap-3 bg-cream-50 px-4 py-2 rounded-xl border border-cream-200 shrink-0">
+                    <div className="flex items-center gap-1.5 text-warning-500">
                       <Star className="h-5 w-5 fill-current" />
                       <span className="font-display text-xl font-bold text-ink-900">
                         {reviewsData?.average_rating ?? '0.0'}
@@ -127,16 +158,16 @@ export default function Reviews() {
               {/* Reviews List */}
               <div className="space-y-4">
                 {reviews.length === 0 ? (
-                  <Card className="p-12 text-center">
-                    <MessageSquare className="mx-auto h-8 w-8 text-ink-300" />
-                    <p className="mt-2 text-sm font-medium text-ink-900">No approved reviews yet</p>
-                    <p className="text-xs text-ink-400">
-                      When customers submit feedback on the storefront, reviews will appear here.
-                    </p>
+                  <Card className="p-10">
+                    <EmptyState
+                      icon={MessageSquare}
+                      title="No reviews published yet"
+                      description="When customers leave ratings and feedback on the storefront, reviews will appear here for moderation."
+                    />
                   </Card>
                 ) : (
                   reviews.map((rev) => (
-                    <Card key={rev.id} className="p-5">
+                    <Card key={rev.id} className="p-5 space-y-3">
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 border-b border-cream-100 pb-3">
                         <div>
                           <div className="flex items-center gap-1 text-warning-500 mb-1">
@@ -156,29 +187,27 @@ export default function Reviews() {
                             {rev.review_title || 'Customer Review'}
                           </h3>
                         </div>
-                        <div className="text-right text-xs">
-                          <p className="font-medium text-ink-900">{rev.reviewer_name}</p>
+                        <div className="text-left sm:text-right text-xs">
+                          <p className="font-semibold text-ink-900">{rev.reviewer_name}</p>
                           <p className="text-ink-400 text-[11px]">
-                            {rev.created_at ? new Date(rev.created_at).toLocaleDateString() : '—'}
+                            {rev.created_at ? new Date(rev.created_at).toLocaleDateString('en-IN') : '—'}
                           </p>
                         </div>
                       </div>
 
-                      <p className="mt-3 text-xs text-ink-700 leading-relaxed">
+                      <p className="text-xs text-ink-700 leading-relaxed">
                         {rev.review_text}
                       </p>
 
-                      <div className="mt-4 pt-3 border-t border-cream-100 flex items-center justify-between">
+                      <div className="pt-2 border-t border-cream-100 flex items-center justify-between">
                         <Badge tone="forest">APPROVED</Badge>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleModerate(rev.id, 'REJECTED')}
-                            disabled={moderateMutation.isLoading}
-                            className="inline-flex items-center gap-1 rounded-pill bg-cream-200 px-3 py-1 text-xs font-semibold text-chili-600 hover:bg-chili-50 transition-colors disabled:opacity-50"
-                          >
-                            <X className="h-3 w-3" /> Reject & Hide
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => setRejectDialog({ open: true, reviewId: rev.id })}
+                          disabled={moderateMutation.isLoading}
+                          className="inline-flex items-center gap-1.5 rounded-pill bg-cream-200 px-3.5 py-1.5 text-xs font-semibold text-chili-600 hover:bg-chili-50 transition-colors disabled:opacity-50"
+                        >
+                          <X className="h-3.5 w-3.5" /> Reject & Hide
+                        </button>
                       </div>
                     </Card>
                   ))
@@ -188,6 +217,18 @@ export default function Reviews() {
           )}
         </div>
       </div>
+
+      {/* Moderation Confirm Dialog */}
+      <ConfirmDialog
+        open={rejectDialog.open}
+        onClose={() => setRejectDialog({ open: false, reviewId: null })}
+        onConfirm={confirmReject}
+        title="Reject and Hide Review"
+        message="Are you sure you want to reject this review? It will be removed from the public storefront."
+        confirmText="Yes, Reject Review"
+        variant="danger"
+        loading={moderateMutation.isLoading}
+      />
     </DashboardShell>
   )
 }
