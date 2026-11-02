@@ -32,7 +32,7 @@ export default function SearchPage() {
   })
 
   const categories = useMemo(() => {
-    const cats = categoriesQuery.data?.categories?.map((c) => c.category) || []
+    const cats = categoriesQuery.data?.categories?.map((c) => c?.category).filter(Boolean) || []
     return ['All', ...cats]
   }, [categoriesQuery.data])
 

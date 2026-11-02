@@ -70,13 +70,13 @@ export default function Home() {
   })
 
   const allProducts = useMemo(
-    () => productsQuery.data?.pages.flatMap((page) => page.products) ?? [],
+    () => productsQuery.data?.pages?.flatMap((page) => page?.products || []).filter(Boolean) ?? [],
     [productsQuery.data],
   )
 
   const categories = useMemo(() => {
-    const backendCategories = categoriesQuery.data?.categories?.map((c) => c.category) || []
-    const productCategories = allProducts.map((p) => p.category).filter(Boolean)
+    const backendCategories = categoriesQuery.data?.categories?.map((c) => c?.category).filter(Boolean) || []
+    const productCategories = allProducts.map((p) => p?.category).filter(Boolean)
     const combined = Array.from(new Set([...backendCategories, ...productCategories]))
     return ['All', ...combined]
   }, [categoriesQuery.data, allProducts])
@@ -84,7 +84,7 @@ export default function Home() {
   // Products filtered by currently selected category
   const filteredProducts = useMemo(() => {
     if (activeCategory === 'All') return allProducts
-    return allProducts.filter((p) => p.category === activeCategory)
+    return allProducts.filter((p) => p?.category === activeCategory)
   }, [allProducts, activeCategory])
 
   // Paginated view for catalog grid
@@ -403,7 +403,7 @@ export default function Home() {
                 const count =
                   cat === 'All'
                     ? allProducts.length
-                    : allProducts.filter((p) => p.category === cat).length
+                    : allProducts.filter((p) => p?.category === cat).length
                 const isSelected = activeCategory === cat
 
                 return (
