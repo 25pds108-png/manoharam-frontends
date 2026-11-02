@@ -30,12 +30,19 @@ export function resolveImageUrl(src) {
     return '' // Let component fallback to authentic local photography
   }
 
-  // 3. Fully qualified absolute URLs
+  // 3. Any image path pointing to our /uploads/ directory (whether absolute URL or relative)
+  // This automatically handles URLs containing localhost, missing /api/ prefix, or raw relative paths.
+  const uploadsIndex = trimmed.indexOf('/uploads/')
+  if (uploadsIndex !== -1) {
+    const uploadSuffix = trimmed.substring(uploadsIndex)
+    return `${BACKEND_BASE}${uploadSuffix}`
+  }
+  if (trimmed.startsWith('uploads/')) {
+    return `${BACKEND_BASE}/${trimmed}`
+  }
+
+  // 4. Fully qualified external URLs (e.g., Cloudinary, S3, Unsplash)
   if (/^https?:\/\//i.test(trimmed)) {
-    if (trimmed.includes('localhost/Manoharam-Real-Foods')) {
-      const suffix = trimmed.split('localhost/Manoharam-Real-Foods')[1] || ''
-      return `${BACKEND_BASE}${suffix}`
-    }
     return trimmed
   }
 
